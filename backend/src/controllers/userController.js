@@ -49,7 +49,7 @@ exports.uploadAvatar = async (req, res) => {
     // Update user's avatar in DB
     const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/avatars/${req.file.filename}`;
     const updatedUser = await User.findByIdAndUpdate(
-      req.user._id || req.user.id, // Support both _id and id
+      req.user._id || req.user.id || req.user.userId, // Support both _id and id
       { avatar: avatarUrl },
       { new: true }
     ).select('-password'); // Exclude password

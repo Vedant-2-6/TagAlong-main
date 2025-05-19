@@ -20,7 +20,7 @@ const ProfilePage: React.FC = () => {
       formData.append('avatar', file);
 
       // Upload to backend
-      const response = await fetch('/api/users/avatar', {
+      const response = await fetch('http://localhost:5000/api/users/avatar', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('tagalong-token')}`
@@ -29,11 +29,8 @@ const ProfilePage: React.FC = () => {
       });
       const data = await response.json();
       if (data.avatarUrl && data.user) {
-        setCurrentUser({
-          ...currentUser,
-          avatar: data.avatarUrl
-        });
-        setAvatarPreview(null); // Clear preview after upload
+        setCurrentUser(data.user); // Use the updated user object from backend
+        // setAvatarPreview(null); // Clear preview after upload
       }
     }
   };

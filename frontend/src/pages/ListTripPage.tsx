@@ -97,60 +97,63 @@ const ListTripPage: React.FC = () => {
           {step === 1 && (
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center"><UserCheck size={20} className="mr-2" />Verify Your Identity</h2>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
-                <select
-                  value={documentType}
-                  onChange={e => setDocumentType(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
-                >
-                  <option value="">Select Document</option>
-                  {documentTypes.map(doc => (
-                    <option key={doc.value} value={doc.value}>{doc.label}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
+                  <select
+                    value={documentType}
+                    onChange={e => setDocumentType(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  >
+                    <option value="">Select Document</option>
+                    {documentTypes.map(doc => (
+                      <option key={doc.value} value={doc.value}>{doc.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Document Number</label>
+                  <input
+                    type="text"
+                    value={documentNumber}
+                    onChange={e => setDocumentNumber(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                </div>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Document Number</label>
-                <input
-                  type="text"
-                  value={documentNumber}
-                  onChange={e => setDocumentNumber(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <Upload size={16} className="mr-1" />Upload Document Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange(setDocumentImage)}
+                    className="w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <Upload size={16} className="mr-1" />Upload Selfie with Document
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange(setSelfieImage)}
+                    className="w-full"
+                    required
+                  />
+                </div>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                  <Upload size={16} className="mr-1" />Upload Document Image
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange(setDocumentImage)}
-                  className="w-full"
-                  required
-                />
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                  <Upload size={16} className="mr-1" />Upload Selfie with Document
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange(setSelfieImage)}
-                  className="w-full"
-                  required
-                />
-              </div>
-              <div className="flex justify-between">
-                <div></div>
+              <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="bg-teal-500 text-white px-6 py-2 rounded-md hover:bg-teal-600 transition-colors"
+                  className="bg-teal-500 text-white px-8 py-2 rounded-md hover:bg-teal-600 transition-colors font-semibold"
                   disabled={!documentType || !documentNumber || !documentImage || !selfieImage}
                 >
                   Next
@@ -163,7 +166,7 @@ const ListTripPage: React.FC = () => {
           {step === 2 && (
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center"><Truck size={20} className="mr-2" />Trip Details</h2>
-              <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
                   <input
@@ -187,7 +190,7 @@ const ListTripPage: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                     <Calendar size={16} className="mr-1" />Date of Journey
@@ -216,21 +219,36 @@ const ListTripPage: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Means of Transport</label>
-                <select
-                  value={transport}
-                  onChange={e => setTransport(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
-                >
-                  <option value="">Select</option>
-                  {transportModes.map(mode => (
-                    <option key={mode.value} value={mode.value}>{mode.label}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Means of Transport</label>
+                  <select
+                    value={transport}
+                    onChange={e => setTransport(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  >
+                    <option value="">Select</option>
+                    {transportModes.map(mode => (
+                      <option key={mode.value} value={mode.value}>{mode.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center mt-6">
+                  <input
+                    id="fragile"
+                    type="checkbox"
+                    checked={acceptsFragile}
+                    onChange={e => setAcceptsFragile(e.target.checked)}
+                    className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="fragile" className="ml-2 block text-sm text-gray-700 flex items-center">
+                    <PackageCheck size={16} className="mr-1 text-gray-500" />
+                    Accept Fragile Items
+                  </label>
+                </div>
               </div>
-              <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                     <PackageCheck size={16} className="mr-1" />Capacity (Weight in kg)
@@ -260,19 +278,6 @@ const ListTripPage: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="mb-4 flex items-center">
-                <input
-                  id="fragile"
-                  type="checkbox"
-                  checked={acceptsFragile}
-                  onChange={e => setAcceptsFragile(e.target.checked)}
-                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
-                />
-                <label htmlFor="fragile" className="ml-2 block text-sm text-gray-700 flex items-center">
-                  <PackageCheck size={16} className="mr-1 text-gray-500" />
-                  Accept Fragile Items
-                </label>
-              </div>
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category of Goods</label>
                 <div className="flex flex-wrap gap-2">
@@ -292,14 +297,14 @@ const ListTripPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors"
+                  className="bg-gray-200 text-gray-700 px-8 py-2 rounded-md hover:bg-gray-300 transition-colors font-semibold"
                 >
                   Back
                 </button>
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="bg-teal-500 text-white px-6 py-2 rounded-md hover:bg-teal-600 transition-colors"
+                  className="bg-teal-500 text-white px-8 py-2 rounded-md hover:bg-teal-600 transition-colors font-semibold"
                   disabled={
                     !source || !destination || !departureDate || !duration || !transport ||
                     !capacityWeight || !capacityVolume || acceptedCategories.length === 0
@@ -315,42 +320,44 @@ const ListTripPage: React.FC = () => {
           {step === 3 && (
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center"><FileText size={20} className="mr-2" />Identification & Cost</h2>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                  <Upload size={16} className="mr-1" />Upload Latest Photo for Identification
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange(setIdentificationPhoto)}
-                  className="w-full"
-                  required
-                />
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                  <IndianRupee size={16} className="mr-1" />Cost of Service (in ₹)
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  value={price}
-                  onChange={e => setPrice(Number(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <Upload size={16} className="mr-1" />Upload Latest Photo for Identification
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange(setIdentificationPhoto)}
+                    className="w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <IndianRupee size={16} className="mr-1" />Cost of Service (in ₹)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={price}
+                    onChange={e => setPrice(Number(e.target.value))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                </div>
               </div>
               <div className="flex justify-between">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors"
+                  className="bg-gray-200 text-gray-700 px-8 py-2 rounded-md hover:bg-gray-300 transition-colors font-semibold"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
-                  className="bg-teal-500 text-white px-6 py-2 rounded-md hover:bg-teal-600 transition-colors"
+                  className="bg-teal-500 text-white px-8 py-2 rounded-md hover:bg-teal-600 transition-colors font-semibold"
                   disabled={!identificationPhoto || price <= 0}
                 >
                   List Trip
