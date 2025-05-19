@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
-import { mockUsers } from '../data/mockData';
 
 interface AuthContextType {
   currentUser: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<boolean>;
   logout: () => void;
   signUp: (name: string, email: string, password: string, phone: string) => Promise<{ success: boolean; error?: string }>;
   setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>; // <-- Add this line
@@ -18,15 +17,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if user is already logged in (from localStorage in a real app)
-    const storedUser = localStorage.getItem('tagalong-user');
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
+    // Check both localStorage and sessionStorage for token
+    const token = localStorage.getItem('tagalong-token') || sessionStorage.getItem('tagalong-token');
+    const userId = localStorage.getItem('tagalong-user-id') || sessionStorage.getItem('tagalong-user-id');
+    if (token && userId) {
       setIsAuthenticated(true);
+      fetch(`/api/users/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(async res => {
+          const contentType = res.headers.get('content-type');
+          if (!res.ok) {
+            throw new Error('Failed to fetch user');
+          }
+          if (contentType && contentType.includes('application/json')) {
+            return res.json();
+          } else {
+            throw new Error('Server did not return JSON');
+          }
+        })
+        .then(user => {
+          setCurrentUser(user);
+        })
+        .catch((err) => {
+          console.error('Failed to fetch user on reload:', err);
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+        });
     }
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  // Add rememberMe parameter
+  const login = async (email: string, password: string, rememberMe: boolean = false): Promise<boolean> => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -37,8 +61,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await response.json();
       setCurrentUser(data.user);
       setIsAuthenticated(true);
-      localStorage.setItem('tagalong-user', JSON.stringify(data.user));
-      // Optionally store token: localStorage.setItem('tagalong-token', data.token);
+      if (rememberMe) {
+        localStorage.setItem('tagalong-token', data.token);
+        localStorage.setItem('tagalong-user-id', data.user.id || data.user._id);
+        sessionStorage.removeItem('tagalong-token');
+        sessionStorage.removeItem('tagalong-user-id');
+      } else {
+        sessionStorage.setItem('tagalong-token', data.token);
+        sessionStorage.setItem('tagalong-user-id', data.user.id || data.user._id);
+        localStorage.removeItem('tagalong-token');
+        localStorage.removeItem('tagalong-user-id');
+      }
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -49,8 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setCurrentUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('tagalong-user');
     localStorage.removeItem('tagalong-token');
+    localStorage.removeItem('tagalong-user-id');
+    sessionStorage.removeItem('tagalong-token');
+    sessionStorage.removeItem('tagalong-user-id');
   };
 
   const signUp = async (

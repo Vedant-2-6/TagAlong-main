@@ -12,15 +12,20 @@ interface FormState {
 
 export const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setError(null);
+    const { name, value, type, checked } = e.target;
+    if (type === 'checkbox' && name === 'remember-me') {
+      setRememberMe(checked);
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      setError(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,11 +34,10 @@ export const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      const success = await login(formData.email, formData.password);
+      const success = await login(formData.email, formData.password, rememberMe);
       if (success) {
         navigate('/');
       } else {
-        // Show a more descriptive error if available
         setError('Invalid email or password. Please check your credentials.');
       }
     } catch (err: any) {
@@ -121,6 +125,8 @@ export const LoginPage: React.FC = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={handleChange}
                   className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">

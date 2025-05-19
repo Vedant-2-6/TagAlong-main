@@ -6,6 +6,7 @@ import { Mail, Phone, User, Edit, LogOut, ShieldCheck } from 'lucide-react';
 const ProfilePage: React.FC = () => {
   const { currentUser, setCurrentUser, logout } = useAuth();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
   // Handler for image change
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!currentUser) return;
@@ -27,25 +28,12 @@ const ProfilePage: React.FC = () => {
         body: formData
       });
       const data = await response.json();
-      if (data.avatarUrl) {
+      if (data.avatarUrl && data.user) {
         setCurrentUser({
-          id: currentUser.id,
-          name: currentUser.name ?? "",
-          email: currentUser.email ?? "",
-          phone: currentUser.phone ?? "",
-          avatar: data.avatarUrl,
-          role: currentUser.role ?? "User",
-          isVerified: currentUser.isVerified ?? false,
-          createdAt: currentUser.createdAt ?? "",
-          verificationStatus: currentUser.verificationStatus ?? "unverified",
-          verificationDocuments: currentUser.verificationDocuments ?? [],
-          rating: currentUser.rating ?? 0,
-          reviews: currentUser.reviews ?? [],
-          lastSeen: currentUser.lastSeen ?? "",
-          onlineStatus: currentUser.onlineStatus ?? "offline",
+          ...currentUser,
+          avatar: data.avatarUrl
         });
-        localStorage.setItem('tagalong-user', JSON.stringify({ ...currentUser, avatar: data.avatarUrl }));
-        setAvatarPreview(data.avatarUrl); // Optionally update to backend URL after upload
+        setAvatarPreview(null); // Clear preview after upload
       }
     }
   };
@@ -79,7 +67,7 @@ const ProfilePage: React.FC = () => {
               <span className="absolute -inset-1 rounded-full bg-gradient-to-tr from-teal-400 to-blue-400 opacity-30 blur"></span>
               <img
                 src={avatarPreview || currentUser.avatar}
-                key={avatarPreview || currentUser.avatar} // <-- Add this line
+                key={avatarPreview || currentUser.avatar}
                 alt={currentUser.name}
                 className="w-36 h-36 rounded-full object-cover border-4 border-teal-200 shadow-xl relative z-10"
               />
