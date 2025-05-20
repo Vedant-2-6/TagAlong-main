@@ -73,9 +73,9 @@ const ListTripPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">List Your Trip</h1>
+    <div className="min-h-screen bg-gray-50 pt-20 pb-12">
+      <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6 text-left">List Your Trip</h1>
         <div className="flex justify-center mb-8">
           <div className="flex items-center space-x-4">
             <div className={`w-8 h-8 flex items-center justify-center rounded-full border-2 ${step >= 1 ? 'border-teal-500 bg-teal-500 text-white' : 'border-gray-300 bg-white text-gray-400'}`}>

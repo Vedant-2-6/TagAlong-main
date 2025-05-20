@@ -19,6 +19,7 @@ import { mockUsers, mockMessages } from './data/mockData'; // Make sure these ex
 import ChatList from './components/ChatList';
 import { useState } from 'react';
 import { Message } from './types';
+import SettingsPage from './pages/SettingsPage';
 
 
 
@@ -71,6 +72,8 @@ function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/help" element={<HelpCenterPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            
             <Route
               path="/messages"
               element={
