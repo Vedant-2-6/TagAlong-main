@@ -27,4 +27,16 @@ router.post('/', userController.createUser);
 router.get('/', userController.getUsers);
 router.get('/:id', userController.getUserById);
 
+// Update email
+router.patch('/update-email', authenticate, userController.updateEmail);
+
+// Update phone
+router.patch('/update-phone', authenticate, userController.updatePhone);
+
+// Change password
+router.put('/change-password', authenticate, userController.changePassword);
+
+// Delete account
+router.delete('/delete-account', authenticate, userController.deleteAccount);
+
 module.exports = router;

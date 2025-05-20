@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Switch } from '@headlessui/react';
 import { Link } from 'react-router-dom';
 import { Bell, Globe, Lock, Trash, Mail, Phone, Edit, Check, X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const SettingsPage: React.FC = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -10,30 +11,99 @@ const SettingsPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [showPasswordChange, setShowPasswordChange] = useState(false);
 
-  const [email, setEmail] = useState('user@example.com');
+  const { currentUser, setCurrentUser, logout } = useAuth();
+
+  // Use backend data as initial state
+  const [email, setEmail] = useState(currentUser?.email || '');
   const [editingEmail, setEditingEmail] = useState(false);
   const [tempEmail, setTempEmail] = useState(email);
 
-  const [phoneNumber, setPhoneNumber] = useState('123-456-7890');
+  const [phoneNumber, setPhoneNumber] = useState(currentUser?.phone || '');
   const [editingPhone, setEditingPhone] = useState(false);
   const [tempPhone, setTempPhone] = useState(phoneNumber);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
 
-  const handlePasswordChange = () => {
-    if (oldPassword === 'correctOldPassword') {
-      console.log('Password changed to:', newPassword);
-    } else {
-      console.log('Old password is incorrect');
+  // Update email in backend
+  const handleSaveEmail = async () => {
+    try {
+      const token = localStorage.getItem('tagalong-token') || sessionStorage.getItem('tagalong-token');
+      const response = await fetch('/api/users/update-email', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email: tempEmail }),
+      });
+      if (!response.ok) throw new Error('Failed to update email');
+      const data = await response.json();
+      setEmail(data.user.email);
+      setCurrentUser((prev: any) => prev ? { ...prev, email: data.user.email } : prev);
+      setEditingEmail(false);
+    } catch (err) {
+      alert('Failed to update email');
     }
   };
 
-  const handleDeleteAccount = () => {
-    if (deletePassword === 'correctOldPassword') {
-      console.log('Account deleted');
-      // Add actual delete logic here
-    } else {
+  // Update phone in backend
+  const handleSavePhone = async () => {
+    try {
+      const token = localStorage.getItem('tagalong-token') || sessionStorage.getItem('tagalong-token');
+      const response = await fetch('/api/users/update-phone', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ phone: tempPhone }),
+      });
+      if (!response.ok) throw new Error('Failed to update phone');
+      const data = await response.json();
+      setPhoneNumber(data.user.phone);
+      setCurrentUser((prev: any) => prev ? { ...prev, phone: data.user.phone } : prev);
+      setEditingPhone(false);
+    } catch (err) {
+      alert('Failed to update phone');
+    }
+  };
+
+  // Change password in backend
+  const handlePasswordChange = async () => {
+    try {
+      const token = localStorage.getItem('tagalong-token') || sessionStorage.getItem('tagalong-token');
+      const response = await fetch('/api/users/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+      if (!response.ok) throw new Error('Password change failed');
+      alert('Password changed successfully');
+    } catch (err) {
+      alert('Old password is incorrect or change failed');
+    }
+  };
+
+  // Delete account in backend
+  const handleDeleteAccount = async () => {
+    try {
+      const token = localStorage.getItem('tagalong-token') || sessionStorage.getItem('tagalong-token');
+      const response = await fetch('/api/users/delete-account', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: deletePassword }),
+      });
+      if (!response.ok) throw new Error('Delete failed');
+      logout();
+      alert('Account deleted');
+    } catch (err) {
       alert('Incorrect password. Account not deleted.');
     }
   };
@@ -59,10 +129,7 @@ const SettingsPage: React.FC = () => {
                       className="bg-white border border-gray-300 text-gray-700 text-sm rounded-md focus:ring-teal-500 focus:border-teal-500 p-2 mr-2"
                     />
                     <button
-                      onClick={() => {
-                        setEmail(tempEmail);
-                        setEditingEmail(false);
-                      }}
+                      onClick={handleSaveEmail}
                       className="text-green-600 hover:text-green-800 mr-1"
                       title="Save"
                     >
@@ -108,10 +175,7 @@ const SettingsPage: React.FC = () => {
                       className="bg-white border border-gray-300 text-gray-700 text-sm rounded-md focus:ring-teal-500 focus:border-teal-500 p-2 mr-2"
                     />
                     <button
-                      onClick={() => {
-                        setPhoneNumber(tempPhone);
-                        setEditingPhone(false);
-                      }}
+                      onClick={handleSavePhone}
                       className="text-green-600 hover:text-green-800 mr-1"
                       title="Save"
                     >
