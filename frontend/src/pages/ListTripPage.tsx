@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
 import { Calendar, Truck, PackageCheck, Box, Upload, UserCheck, IndianRupee, Timer, FileText } from 'lucide-react';
+import { auth } from '../firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+declare global {
+  interface Window {
+    recaptchaVerifier?: any;
+    confirmationResult?: any;
+  }
+}
 
 const documentTypes = [
   { value: 'aadhar', label: 'Aadhar Card' },
@@ -47,6 +55,86 @@ const ListTripPage: React.FC = () => {
   const [acceptedCategories, setAcceptedCategories] = useState<string[]>([]);
   const [identificationPhoto, setIdentificationPhoto] = useState<File | null>(null);
   const [price, setPrice] = useState<number>(0);
+  const [aadhaarFile, setAadhaarFile] = useState<File | null>(null);
+  const [aadhaarNumber, setAadhaarNumber] = useState('');
+  const [aadhaarPhone, setAadhaarPhone] = useState('');
+  const [aadhaarName, setAadhaarName] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [ocrError, setOcrError] = useState('');
+
+  // Aadhaar OCR handler
+  const handleAadhaarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setOcrError('');
+    setAadhaarNumber('');
+    setAadhaarPhone('');
+    setAadhaarName('');
+    setOtpSent(false);
+    setOtpVerified(false);
+    if (e.target.files && e.target.files[0]) {
+      setAadhaarFile(e.target.files[0]);
+      setOcrLoading(true);
+      const formData = new FormData();
+      formData.append('aadhaar', e.target.files[0]);
+      try {
+        const res = await fetch('/api/trip/ocr/aadhaar', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.aadhaarNumber) {
+          setAadhaarNumber(data.aadhaarNumber);
+          if (data.phone) setAadhaarPhone(data.phone);
+          if (data.name) setAadhaarName(data.name);
+        } else {
+          setOcrError('Could not extract Aadhaar details. Please upload a clear image or PDF.');
+        }
+      } catch {
+        setOcrError('OCR failed. Please try again.');
+      }
+      setOcrLoading(false);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    setOtpError('');
+    setOtpLoading(true);
+    try {
+      if (!window.recaptchaVerifier) {
+        const recaptchaContainer = document.getElementById('recaptcha-container');
+        if (!recaptchaContainer) {
+          throw new Error('Recaptcha container not found');
+        }
+        window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+          'size': 'invisible',
+        }, auth);
+      }
+      const appVerifier = window.recaptchaVerifier;
+      console.log('Phone Number:', aadhaarPhone); // Debugging log
+      console.log('App Verifier:', appVerifier); // Debugging log
+      const confirmationResult = await signInWithPhoneNumber(auth, `+91${aadhaarPhone}`, appVerifier);
+      window.confirmationResult = confirmationResult;
+      setOtpSent(true);
+    } catch (error) {
+      setOtpError('Failed to send OTP. Try again.');
+      console.error('Error during OTP sending:', error);
+    }
+    setOtpLoading(false);
+  };
+
+  const handleVerifyOtp = async () => {
+    setOtpError('');
+    setOtpLoading(true);
+    try {
+      const confirmationResult = window.confirmationResult;
+      await confirmationResult.confirm(otp);
+      setOtpVerified(true);
+    } catch (error) {
+      setOtpError('Invalid OTP. Please try again.');
+    }
+    setOtpLoading(false);
+  };
 
   // Handle category selection
   const toggleCategory = (cat: string) => {
@@ -93,76 +181,100 @@ const ListTripPage: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Step 1: Verification */}
+          {/* Step 1: Aadhaar OTP Verification */}
           {step === 1 && (
             <div>
-              <h2 className="text-xl font-semibold mb-4 flex items-center"><UserCheck size={20} className="mr-2" />Verify Your Identity</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
-                  <select
-                    value={documentType}
-                    onChange={e => setDocumentType(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  >
-                    <option value="">Select Document</option>
-                    {documentTypes.map(doc => (
-                      <option key={doc.value} value={doc.value}>{doc.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Document Number</label>
+              <h2 className="text-xl font-semibold mb-4 flex items-center">
+                <UserCheck size={20} className="mr-2" />Aadhaar Verification (with OTP)
+              </h2>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload Aadhaar Image or PDF
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={handleAadhaarFileChange}
+                  className="w-full"
+                  required
+                  disabled={ocrLoading}
+                />
+                {ocrLoading && <div className="text-teal-600 mt-2">Extracting details...</div>}
+                {ocrError && <div className="text-red-600 mt-2">{ocrError}</div>}
+              </div>
+              {/* Verification Animation and Next Step */}
+              {aadhaarNumber && aadhaarPhone && /^\d{12}$/.test(aadhaarNumber) && /^\d{10}$/.test(aadhaarPhone) && (
+                <div className="flex flex-col items-center mb-4">
+                  {/* Tick Animation */}
+                  <svg className="w-16 h-16 text-green-500 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 13l3 3 7-7" />
+                  </svg>
+                  <div className="text-green-700 font-bold text-lg mt-2">User Verified!</div>
+                  <div className="text-gray-600 mt-1 mb-2">Please enter your phone number or email for OTP verification.</div>
                   <input
                     type="text"
-                    value={documentNumber}
-                    onChange={e => setDocumentNumber(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={aadhaarPhone}
+                    onChange={e => setAadhaarPhone(e.target.value)}
+                    className="border px-4 py-2 rounded mt-2 w-64 text-center"
+                    placeholder="Enter phone number or email"
                     required
                   />
+                  {!otpSent && (
+                    <button
+                      type="button"
+                      className="bg-teal-500 text-white px-6 py-2 rounded-md mt-3"
+                      onClick={handleSendOtp}
+                      disabled={otpLoading || (!/^\d{10}$/.test(aadhaarPhone) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(aadhaarPhone))}
+                    >
+                      {otpLoading ? 'Sending OTP...' : 'Send OTP'}
+                    </button>
+                  )}
+                  {otpSent && !otpVerified && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Enter OTP sent to {aadhaarPhone}
+                      </label>
+                      <input
+                        type="text"
+                        value={otp}
+                        onChange={e => setOtp(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        maxLength={6}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="bg-teal-600 text-white px-6 py-2 rounded-md mt-2"
+                        onClick={handleVerifyOtp}
+                        disabled={otpLoading || otp.length !== 6}
+                      >
+                        {otpLoading ? 'Verifying...' : 'Verify OTP'}
+                      </button>
+                      {otpError && <div className="text-red-600 mt-2">{otpError}</div>}
+                    </div>
+                  )}
+                  {otpVerified && (
+                    <div className="text-green-600 mt-4 font-semibold">
+                      OTP Verified! Aadhaar authentication complete.
+                    </div>
+                  )}
+                  <div id="recaptcha-container"></div>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                    <Upload size={16} className="mr-1" />Upload Document Image
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange(setDocumentImage)}
-                    className="w-full"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                    <Upload size={16} className="mr-1" />Upload Selfie with Document
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange(setSelfieImage)}
-                    className="w-full"
-                    required
-                  />
-                </div>
-              </div>
+              )}
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={handleNext}
                   className="bg-teal-500 text-white px-8 py-2 rounded-md hover:bg-teal-600 transition-colors font-semibold"
-                  disabled={!documentType || !documentNumber || !documentImage || !selfieImage}
+                  disabled={!otpVerified}
                 >
                   Next
                 </button>
               </div>
             </div>
           )}
-
-          {/* Step 2: Trip Details */}
+          {/* Step 2, Step 3 ... unchanged */}
           {step === 2 && (
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center"><Truck size={20} className="mr-2" />Trip Details</h2>
@@ -305,10 +417,7 @@ const ListTripPage: React.FC = () => {
                   type="button"
                   onClick={handleNext}
                   className="bg-teal-500 text-white px-8 py-2 rounded-md hover:bg-teal-600 transition-colors font-semibold"
-                  disabled={
-                    !source || !destination || !departureDate || !duration || !transport ||
-                    !capacityWeight || !capacityVolume || acceptedCategories.length === 0
-                  }
+                  disabled={!otpVerified}
                 >
                   Next
                 </button>

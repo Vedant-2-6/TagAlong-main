@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
+const tripRoutes = require('./routes/tripRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -18,5 +19,6 @@ app.use(cors({
 }));
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/trip', tripRoutes);
 // Serve static files from the uploads directory
 app.use('/uploads/avatars', express.static(path.join(__dirname, '../../uploads/avatars')));
