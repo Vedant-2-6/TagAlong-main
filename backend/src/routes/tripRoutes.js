@@ -14,5 +14,13 @@ router.post('/otp/verify', tripController.verifyOtp);
 
 // Trip creation (protected)
 router.post('/trips', authenticate, tripController.createTrip);
+router.put('/trips/:id', authenticate, tripController.editTrip);
+
+// Get trips for logged-in user
+router.get('/mytrips', authenticate, tripController.getMyTrips);
+
+// Edit a trip
+// Add this DELETE route
+router.delete('/trips/:id', authenticate, tripController.deleteTrip);
 
 module.exports = router;

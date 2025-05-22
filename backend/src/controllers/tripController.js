@@ -69,14 +69,18 @@ exports.createTrip = async (req, res) => {
       source,
       destination,
       departureDate,
-      duration,
+      arrivalDate,
       transport,
+      vehicle,
       capacityWeight,
       capacityVolume,
       acceptsFragile,
+      duration,
       acceptedCategories,
+      price,
       identificationPhoto,
-      price
+      description,
+      images
     } = req.body;
 
     const trip = new Trip({
@@ -84,19 +88,64 @@ exports.createTrip = async (req, res) => {
       source,
       destination,
       departureDate,
-      duration,
+      arrivalDate,
       transport,
+      vehicle,
       capacityWeight,
       capacityVolume,
       acceptsFragile,
       acceptedCategories,
+      price,
       identificationPhoto,
-      price
+      description,
+      images
     });
 
     await trip.save();
     res.status(201).json(trip);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+// Get all trips for the logged-in user
+exports.getMyTrips = async (req, res) => {
+  try {
+    const trips = await Trip.find({ user: req.user.userId }).sort({ createdAt: -1 });
+    res.json({ trips });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Edit a trip (only by owner)
+exports.editTrip = async (req, res) => {
+  try {
+    const tripId = req.params.id;
+    const updateData = req.body;
+    const trip = await Trip.findOneAndUpdate(
+      { _id: tripId, user: req.user.userId },
+      updateData,
+      { new: true }
+    );
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found or not authorized' });
+    }
+    res.json(trip);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+exports.deleteTrip = async (req, res) => {
+  try {
+    const tripId = req.params.id;
+    const trip = await Trip.findOneAndDelete({ _id: tripId, user: req.user.userId });
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found or not authorized' });
+    }
+    res.status(200).json({ message: 'Trip deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

@@ -20,6 +20,7 @@ import ChatList from './components/ChatList';
 import { useState } from 'react';
 import { Message } from './types';
 import SettingsPage from './pages/SettingsPage';
+import MyTripsPage from './pages/MyTripsPage';
 
 
 
@@ -73,6 +74,7 @@ function App() {
             <Route path="/help" element={<HelpCenterPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/mytrips" element={<MyTripsPage />} />
             
             <Route
               path="/messages"

@@ -47,6 +47,8 @@ const ListTripPage: React.FC = () => {
   const [aadhaarNumber, setAadhaarNumber] = useState('');
   const [aadhaarPhone, setAadhaarPhone] = useState('');
   const [aadhaarName, setAadhaarName] = useState('');
+  // Add this line:
+  const [description, setDescription] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   const [otpVerified, setOtpVerified] = useState(false);
@@ -137,9 +139,47 @@ const ListTripPage: React.FC = () => {
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Trip listed successfully!');
+    const token = localStorage.getItem('tagalong-token') || sessionStorage.getItem('tagalong-token');
+    const tripData = {
+      source,
+      destination,
+      departureDate,
+      arrivalDate: '', // or your value
+      transport,
+      vehicle: {
+        type: transport,
+        model: '', // collect from user if needed
+        registrationNumber: '', // collect from user if needed
+        verified: false
+      },
+      capacityWeight,
+      capacityVolume,
+      acceptsFragile,
+      acceptedCategories,
+      price,
+      identificationPhoto: '', // handle upload if needed
+      description,
+      images: []
+    };
+  
+    const res = await fetch('/api/trip/trips', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(tripData)
+    });
+  
+    if (res.ok) {
+      alert('Trip listed successfully!');
+      // Optionally redirect or reset form
+    } else {
+      const data = await res.json();
+      alert('Failed to list trip: ' + (data.error || 'Unknown error'));
+    }
   };
 
   return (
@@ -479,6 +519,16 @@ const ListTripPage: React.FC = () => {
                     onChange={e => setPrice(Number(e.target.value))}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
                     required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Trip Description</label>
+                  <textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    placeholder="Describe your trip, special instructions, etc."
+                    rows={4}
                   />
                 </div>
               </div>

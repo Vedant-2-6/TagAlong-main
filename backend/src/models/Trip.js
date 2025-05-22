@@ -18,13 +18,13 @@ const tripSchema = new mongoose.Schema({
   capacityWeight: { type: Number, required: true }, // in kg
   capacityVolume: { type: Number, required: true }, // in m³
   acceptsFragile: { type: Boolean, default: false },
-  acceptedCategories: [{ type: String }], // e.g., electronics, documents, food, etc.
+  acceptedCategories: [{ type: String }],
   price: { type: Number, required: true },
-  identificationPhoto: { type: String }, // URL or filename for ID photo
+  identificationPhoto: { type: String },
   verificationStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   status: { type: String, enum: ['active', 'completed', 'cancelled'], default: 'active' },
   description: { type: String },
-  images: [{ type: String }], // Additional images if needed
+  images: [{ type: String }],
   trackingInfo: [{
     location: { type: String },
     timestamp: { type: Date, default: Date.now },
