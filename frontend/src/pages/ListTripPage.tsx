@@ -106,9 +106,9 @@ const ListTripPage: React.FC = () => {
         if (!recaptchaContainer) {
           throw new Error('Recaptcha container not found');
         }
-        window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
           'size': 'invisible',
-        }, auth);
+        });
       }
       const appVerifier = window.recaptchaVerifier;
       console.log('Phone Number:', aadhaarPhone); // Debugging log

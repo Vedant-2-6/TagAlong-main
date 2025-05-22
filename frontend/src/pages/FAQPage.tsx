@@ -1,5 +1,9 @@
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
+import img1 from '../images/guide.png'
+import img2 from '../images/webinar.png'
+import img3 from '../images/account.png'
+import img4 from '../images/biling.png'
 
 const faqs = [
   {
@@ -7,28 +11,28 @@ const faqs = [
     description: 'Browse our in-depth guides to help you get started.',
     button: 'View Guides',
     bg: 'bg-pink-100',
-    img: '/faq/guides.png', // Replace with your image path
+    img: img1, // Replace with your image path
   },
   {
     title: 'Webinars',
     description: 'Watch recorded webinars to level up your knowledge.',
     button: 'Watch Webinars',
     bg: 'bg-yellow-100',
-    img: '/faq/webinars.png',
+    img: img2,
   },
   {
     title: 'Account',
     description: 'Learn more about how to manage your TagAlong account.',
     button: 'Learn More',
     bg: 'bg-orange-100',
-    img: '/faq/account.png',
+    img: img3,
   },
   {
     title: 'Billing',
     description: 'Find answers to frequently asked billing questions.',
     button: 'Read FAQs',
     bg: 'bg-green-100',
-    img: '/faq/billing.png',
+    img: img4,
   },
 ];
 

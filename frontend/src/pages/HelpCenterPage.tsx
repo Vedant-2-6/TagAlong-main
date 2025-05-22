@@ -14,7 +14,7 @@ const helpTopics = [
     icon: <Truck size={32} className="text-blue-500" />,
     title: 'Booking & Deliveries',
     desc: 'How to book a trip, send a package, and track your deliveries.',
-    button: 'How it Works',
+    button: 'How It Works',
   },
   {
     icon: <CreditCard size={32} className="text-orange-500" />,

@@ -15,7 +15,8 @@ const SearchPage: React.FC = () => {
     date: searchParams.get('date') || '',
     isFragile: searchParams.get('isFragile') === 'true',
     weight: Number(searchParams.get('weight')) || 5,
-    urgency: (searchParams.get('urgency') as 'normal' | 'express') || 'normal'
+    urgency: (searchParams.get('urgency') as 'normal' | 'express') || 'normal',
+    productType: searchParams.get('productType') || 'standard' // Added missing required productType field
   });
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
@@ -119,7 +120,8 @@ const SearchPage: React.FC = () => {
       date: '',
       isFragile: false,
       weight: 5,
-      urgency: 'normal'
+      urgency: 'normal',
+      productType: 'standard' // Added required productType field
     });
     setSearchParams({});
     setFilteredListings(mockListings);
