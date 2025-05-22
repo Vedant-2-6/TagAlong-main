@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Truck, PackageCheck, Box, Upload, UserCheck, IndianRupee, Timer, FileText } from 'lucide-react';
-import { auth } from '../firebase';
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-declare global {
-  interface Window {
-    recaptchaVerifier?: any;
-    confirmationResult?: any;
-  }
-}
+
 
 const documentTypes = [
   { value: 'aadhar', label: 'Aadhar Card' },
@@ -37,12 +30,7 @@ const categories = [
 const ListTripPage: React.FC = () => {
   const [step, setStep] = useState(1);
 
-  // Verification
-  const [documentType, setDocumentType] = useState('');
-  const [documentNumber, setDocumentNumber] = useState('');
-  const [documentImage, setDocumentImage] = useState<File | null>(null);
-  const [selfieImage, setSelfieImage] = useState<File | null>(null);
-
+  
   // Trip Details
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
@@ -67,6 +55,10 @@ const ListTripPage: React.FC = () => {
   const [otpError, setOtpError] = useState('');
   const [ocrError, setOcrError] = useState('');
 
+  // Add this line to fix the error:
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const toastTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   // Aadhaar OCR handler
   const handleAadhaarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setOcrError('');
@@ -97,43 +89,34 @@ const ListTripPage: React.FC = () => {
     }
   };
 
+  // Replace handleSendOtp with a local OTP generator
   const handleSendOtp = async () => {
     setOtpError('');
     setOtpLoading(true);
-    try {
-      if (!window.recaptchaVerifier) {
-        const recaptchaContainer = document.getElementById('recaptcha-container');
-        if (!recaptchaContainer) {
-          throw new Error('Recaptcha container not found');
-        }
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          'size': 'invisible',
-        });
-      }
-      const appVerifier = window.recaptchaVerifier;
-      console.log('Phone Number:', aadhaarPhone); // Debugging log
-      console.log('App Verifier:', appVerifier); // Debugging log
-      const confirmationResult = await signInWithPhoneNumber(auth, `+91${aadhaarPhone}`, appVerifier);
-      window.confirmationResult = confirmationResult;
-      setOtpSent(true);
-    } catch (error) {
-      setOtpError('Failed to send OTP. Try again.');
-      console.error('Error during OTP sending:', error);
-    }
+    // Simulate OTP generation and "sending"
+    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(newOtp);
+    setOtpSent(true);
     setOtpLoading(false);
+    setShowToast(true);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setShowToast(false), 10000); // 10 seconds
   };
 
+  // Replace handleVerifyOtp to check against generatedOtp
   const handleVerifyOtp = async () => {
     setOtpError('');
     setOtpLoading(true);
-    try {
-      const confirmationResult = window.confirmationResult;
-      await confirmationResult.confirm(otp);
+    if (otp === generatedOtp) {
       setOtpVerified(true);
-    } catch (error) {
+    } else {
       setOtpError('Invalid OTP. Please try again.');
     }
     setOtpLoading(false);
+  };
+  const handleCloseToast = () => {
+    setShowToast(false);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
   };
 
   // Handle category selection
@@ -156,12 +139,14 @@ const ListTripPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Submit logic here (API call etc.)
     alert('Trip listed successfully!');
   };
 
   return (
+    
+   
     <div className="min-h-screen bg-gray-50 pt-20 pb-12">
+            
       <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-lg p-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-6 text-left">List Your Trip</h1>
         <div className="flex justify-center mb-8">
@@ -169,6 +154,48 @@ const ListTripPage: React.FC = () => {
             <div className={`w-8 h-8 flex items-center justify-center rounded-full border-2 ${step >= 1 ? 'border-teal-500 bg-teal-500 text-white' : 'border-gray-300 bg-white text-gray-400'}`}>
               <UserCheck size={18} />
             </div>
+            <div className=" bg-gray-50 pt-20 pb-12">
+    {/* Toast Notification */}
+    {showToast && (
+      <div
+        style={{
+          position: 'fixed',
+          top: 24,
+          right: 24,
+          background: '#14b8a6',
+          color: 'white',
+          padding: '12px 24px',
+          borderRadius: 6,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          minWidth: 180,
+          fontWeight: 500,
+        }}
+      >
+        <span style={{ flex: 1 }}>Your OTP is: {generatedOtp}</span>
+        <button
+          onClick={handleCloseToast}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'white',
+            fontSize: 18,
+            marginLeft: 12,
+            cursor: 'pointer',
+            lineHeight: 1,
+          }}
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </div>
+    )}
+    {/* ... existing code ... */}
+  </div>
+
+ 
             <div className={`h-1 w-8 ${step > 1 ? 'bg-teal-500' : 'bg-gray-200'}`}></div>
             <div className={`w-8 h-8 flex items-center justify-center rounded-full border-2 ${step >= 2 ? 'border-teal-500 bg-teal-500 text-white' : 'border-gray-300 bg-white text-gray-400'}`}>
               <Truck size={18} />
@@ -259,7 +286,6 @@ const ListTripPage: React.FC = () => {
                       OTP Verified! Aadhaar authentication complete.
                     </div>
                   )}
-                  <div id="recaptcha-container"></div>
                 </div>
               )}
               <div className="flex justify-end">
