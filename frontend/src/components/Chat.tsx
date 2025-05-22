@@ -50,7 +50,7 @@ const Chat: React.FC<ChatProps> = ({
       clearTimeout(typingTimeoutRef.current);
     }
 
-    typingTimeoutRef.current = setTimeout(() => {
+    typingTimeoutRef.current = window.setTimeout(() => {
       setIsTyping(false);
       onTypingEnd();
     }, 1000);

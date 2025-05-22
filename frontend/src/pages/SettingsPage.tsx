@@ -111,7 +111,8 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-teal-50 py-20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-8 text-center">Settings</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-4 text-center font-sans"><u>Settings</u></h1>
+
         <div className="bg-white shadow-lg rounded-lg p-8">
           <div className="space-y-6">
             {/* Email */}
@@ -263,7 +264,7 @@ const SettingsPage: React.FC = () => {
                 />
               </Switch>
             </div>
-            {/* Language */}
+            {/* Language
             <div className="flex justify-between items-center">
               <span className="flex items-center text-lg font-medium text-gray-700">
                 <Globe className="mr-2" /> Language Preferences
@@ -278,7 +279,7 @@ const SettingsPage: React.FC = () => {
                 <option>Gujarati</option>
                 <option>French</option>
               </select>
-            </div>
+            </div> */}
             {/* Delete Account */}
             <div className="flex justify-between items-center">
               <span className="flex items-center text-lg font-medium text-red-700">

@@ -33,7 +33,7 @@ exports.getUserById = async (req, res) => {
     }
     // Ensure avatar is a full URL
     if (user.avatar && !user.avatar.startsWith('http')) {
-      user.avatar = `${req.protocol}://${req.get('host')}/uploads/avatars/${user.avatar}`;
+      user.avatar = `${req.protocol}://${req.get('host')}/uploads/avatars${user.avatar}`;
     }
     res.json(user);
   } catch (err) {

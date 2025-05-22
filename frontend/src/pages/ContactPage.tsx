@@ -16,9 +16,9 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center pt-20 px-2 py-10">
-      <h1 className="text-4xl font-bold text-gray mb-2 text-center">Contact Us</h1>
+      <h1 className="text-4xl font-bold text-gray mb-2 text-center"><u>Contact Us</u></h1>
       <p className="text-gray-600 mb-8 text-center max-w-2xl">
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.
+      For Inquiries, Support, or Feedback, Please Fill Out the Form Below Or Use the Contact Details Provided.
       </p>
       <div
         ref={cardRef}
@@ -34,7 +34,7 @@ const ContactPage = () => {
             </svg>
             <div>
               <div className="font-semibold">Address</div>
-              <div className="text-sm">4671 Sugar Camp Road,<br />Owatonna, Minnesota, 55060</div>
+              <div className="text-sm">Sampaarsh Tech,Patidar Chowk,<br/>360007,Rajkot,Gujarat</div>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -44,7 +44,7 @@ const ContactPage = () => {
             </svg>
             <div>
               <div className="font-semibold">Phone</div>
-              <div className="text-sm">507-475-6094</div>
+              <div className="text-sm">+1-555-123-4567</div>
             </div>
           </div>
           <div className="flex items-center space-x-4">

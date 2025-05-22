@@ -156,7 +156,8 @@ const HelpCenterPage: React.FC = () => {
         {/* Animated Header */}
         <div ref={headerRef} className="text-center mb-10">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">
-            Help Center
+            <u>Help Center</u>
+            
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
             How can we help you? Browse our most common help topics or search for answers.
