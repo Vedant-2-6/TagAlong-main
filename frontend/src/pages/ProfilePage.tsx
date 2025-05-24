@@ -63,8 +63,7 @@ const ProfilePage: React.FC = () => {
             <div className="relative">
               <span className="absolute -inset-1 rounded-full bg-gradient-to-tr from-teal-400 to-blue-400 opacity-30 blur"></span>
               <img
-                src={avatarPreview || currentUser.avatar}
-                key={avatarPreview || currentUser.avatar}
+                src={avatarPreview || (currentUser.avatar ? currentUser.avatar : `http://localhost:5000/uploads/avatars/${currentUser.id}.jpg`)}
                 alt={currentUser.name}
                 className="w-36 h-36 rounded-full object-cover border-4 border-teal-200 shadow-xl relative z-10"
               />

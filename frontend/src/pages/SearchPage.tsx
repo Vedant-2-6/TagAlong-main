@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { Filter, MapPin, Clock, Package } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
 import SearchForm, { SearchParams } from '../components/SearchForm';
-import { mockListings } from '../data/mockData';
 import { Listing } from '../types';
 
 const SearchPage: React.FC = () => {
