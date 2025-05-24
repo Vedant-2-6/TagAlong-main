@@ -19,6 +19,10 @@ router.put('/trips/:id', authenticate, tripController.editTrip);
 // Get trips for logged-in user
 router.get('/mytrips', authenticate, tripController.getMyTrips);
 
+// Get all trips (public, for search)
+router.get('/trips', tripController.getAllTrips);
+router.get('/alltrips', tripController.getAllTrips);
+
 // Edit a trip
 // Add this DELETE route
 router.delete('/trips/:id', authenticate, tripController.deleteTrip);

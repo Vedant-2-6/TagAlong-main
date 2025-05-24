@@ -20,6 +20,7 @@ export interface User {
 }
 
 export interface Listing {
+  [x: string]: { name: string; avatar: string; rating: string; };
   id: string;
   userId: string;
   source: string;

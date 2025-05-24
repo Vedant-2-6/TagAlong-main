@@ -4,7 +4,9 @@ import { Search, Calendar, PackageCheck, Box } from 'lucide-react';
 interface SearchFormProps {
   onSearch: (params: SearchParams) => void;
   className?: string;
+  initialValues?: Partial<SearchParams>; 
 }
+
 
 export interface SearchParams {
   source: string;
@@ -102,7 +104,6 @@ const SearchForm: React.FC<SearchFormProps> = ({ onSearch, className = '' }) => 
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="pl-10 w-full h-12 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                required
                 min={new Date().toISOString().split('T')[0]}
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
