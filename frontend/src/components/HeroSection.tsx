@@ -66,6 +66,7 @@ const HeroSection: React.FC = () => {
         <div className="hero-search max-w-4xl mx-auto">
           <SearchForm onSearch={handleSearch} />
         </div>
+        
 
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           <div className="feature-item bg-white rounded-lg shadow-md p-6 border-t-4 border-teal-500 hover:shadow-lg transition-shadow">

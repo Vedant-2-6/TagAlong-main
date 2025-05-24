@@ -32,10 +32,12 @@ const ContactPage = () => {
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
               <circle cx="12" cy="9" r="2.5" />
             </svg>
-            <div>
-              <div className="font-semibold">Address</div>
-              <div className="text-sm">Sampaarsh Tech,Patidar Chowk,<br/>360007,Rajkot,Gujarat</div>
-            </div>
+            <a href='https://www.google.com/maps/place/Sampaarsh+Technology/@22.293808,70.7496163,17z/data=!3m1!4b1!4m6!3m5!1s0x3959cb002b3686bf:0xedcc7c19f52f02c6!8m2!3d22.293808!4d70.7521912!16s%2Fg%2F11lctx91mv?entry=ttu&g_ep=EgoyMDI1MDUxNS4xIKXMDSoASAFQAw%3D%3D'>
+              <div>
+                <div className="font-semibold">Address</div>
+                <div className="text-sm">Sampaarsh Tech,Patidar Chowk,<br/>360007,Rajkot,Gujarat</div>
+              </div>
+            </a>
           </div>
           <div className="flex items-center space-x-4">
             {/* Phone Icon */}
@@ -55,7 +57,8 @@ const ContactPage = () => {
             </svg>
             <div>
               <div className="font-semibold">Email</div>
-              <div className="text-sm break-all">wrub7d7f80@temporary-mail.net</div>
+              <a href="mailto:tagalong.samparsh@gmail.com" >
+              <div className="text-sm break-all">tagalong.samparsh@gmail.com</div></a>
             </div>
           </div>
         </div>

@@ -7,7 +7,6 @@ import HeroSection from '../components/HeroSection';
 import { mockListings } from '../data/mockData';
 import ListingCard from '../components/ListingCard';
 
-
 gsap.registerPlugin(ScrollTrigger);
 
 const HomePage: React.FC = () => {

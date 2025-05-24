@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Search, LifeBuoy, MessageCircle, ShieldCheck, UserCheck, CreditCard, Truck, ChevronLeft, ChevronRight } from 'lucide-react';
 import gsap from 'gsap';
