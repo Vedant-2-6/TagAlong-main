@@ -21,4 +21,4 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/trip', tripRoutes);
 // Serve static files from the uploads directory
-app.use('/uploads/avatars', express.static(path.join(__dirname, '../../uploads/avatars')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

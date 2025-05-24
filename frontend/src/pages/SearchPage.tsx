@@ -3,11 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import { Filter, MapPin, Clock, Package } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
 import SearchForm, { SearchParams } from '../components/SearchForm';
-import { mockListings } from '../data/mockData';
 import { Listing } from '../types';
 
 const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [allTrips, setAllTrips] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [searchCriteria, setSearchCriteria] = useState<SearchParams>({
     source: searchParams.get('source') || '',
@@ -19,17 +19,35 @@ const SearchPage: React.FC = () => {
     productType: searchParams.get('productType') || 'standard' // Added missing required productType field
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const [priceRange, setPriceRange] = useState<[number|null, number|null]>([null, null]);
   const [sortOption, setSortOption] = useState<'price_asc' | 'price_desc' | 'date_asc' | 'rating'>('date_asc');
 
   useEffect(() => {
-    handleSearch(searchCriteria);
+    const fetchTrips = async () => {
+      try {
+        const response = await fetch('/api/trip/alltrips');
+        if (response.ok) {
+          const data = await response.json();
+          // Map backend trips to expected Listing structure
+          const mappedTrips = data.trips.map((trip: any) => ({
+            ...trip,
+            capacity: {
+              weight: trip.capacityWeight,
+              volume: trip.capacityVolume
+            }
+          }));
+          setAllTrips(mappedTrips);
+          setFilteredListings(mappedTrips);
+        }
+      } catch (error) {
+        console.error('Failed to fetch trips', error);
+      }
+    };
+    fetchTrips();
   }, []);
 
   const handleSearch = (params: SearchParams) => {
     setSearchCriteria(params);
-    
-    // Update URL search params
     setSearchParams({
       source: params.source,
       destination: params.destination,
@@ -38,9 +56,7 @@ const SearchPage: React.FC = () => {
       ...(params.weight && { weight: params.weight.toString() }),
       ...(params.urgency && { urgency: params.urgency })
     });
-    
-    // Filter listings based on search criteria
-    let results = mockListings.filter(listing => {
+    let results = allTrips.filter(listing => {
       // Match source and destination
       const sourceMatch = listing.source.toLowerCase().includes(params.source.toLowerCase());
       const destMatch = listing.destination.toLowerCase().includes(params.destination.toLowerCase());
@@ -65,10 +81,12 @@ const SearchPage: React.FC = () => {
       return sourceMatch && destMatch && dateMatch && fragileMatch && weightMatch;
     });
     
-    // Apply price filter
-    results = results.filter(listing => 
-      listing.price >= priceRange[0] && listing.price <= priceRange[1]
-    );
+    // Apply price filter only if min or max is set
+    results = results.filter(listing => {
+      const minOk = priceRange[0] === null || listing.price >= priceRange[0];
+      const maxOk = priceRange[1] === null || listing.price <= priceRange[1];
+      return minOk && maxOk;
+    });
     
     // Apply sorting
     switch (sortOption) {
@@ -121,10 +139,10 @@ const SearchPage: React.FC = () => {
       isFragile: false,
       weight: 5,
       urgency: 'normal',
-      productType: 'standard' // Added required productType field
+      productType: 'standard'
     });
     setSearchParams({});
-    setFilteredListings(mockListings);
+    setFilteredListings(allTrips); // <-- Use allTrips instead of mockListings
   };
 
   return (
@@ -132,7 +150,7 @@ const SearchPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Find Available Trips</h1>
-          <SearchForm onSearch={handleSearch} className="bg-white shadow rounded-lg" />
+          <SearchForm onSearch={handleSearch} className="bg-white shadow rounded-lg" initialValues={searchCriteria} />
         </div>
 
         <div className="lg:flex lg:gap-8">
@@ -153,9 +171,8 @@ const SearchPage: React.FC = () => {
                         type="number"
                         id="min-price"
                         min="0"
-                        max={priceRange[1]}
-                        value={priceRange[0]}
-                        onChange={handlePriceChange}
+                        value={priceRange[0] ?? ''}
+                        onChange={e => setPriceRange([e.target.value ? Number(e.target.value) : null, priceRange[1]])}
                         className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
                       />
                     </div>
@@ -164,9 +181,10 @@ const SearchPage: React.FC = () => {
                       <input
                         type="number"
                         id="max-price"
-                        min={priceRange[0]}
-                        value={priceRange[1]}
-                        onChange={handlePriceChange}
+                        min={0}
+                        max={priceRange[1] ?? ''}
+                        value={priceRange[0] ?? ''}
+                        onChange={e => setPriceRange([priceRange[0], e.target.value ? Number(e.target.value) : null])}
                         className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
                       />
                     </div>
@@ -232,8 +250,8 @@ const SearchPage: React.FC = () => {
                           type="number"
                           id="mobile-min-price"
                           min="0"
-                          max={priceRange[1]}
-                          value={priceRange[0]}
+                          max={priceRange[1] ?? ''}
+                          value={priceRange[0] ?? ''}
                           onChange={handlePriceChange}
                           className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
                         />
@@ -243,9 +261,9 @@ const SearchPage: React.FC = () => {
                         <input
                           type="number"
                           id="mobile-max-price"
-                          min={priceRange[0]}
-                          value={priceRange[1]}
-                          onChange={handlePriceChange}
+                          min="0"
+                          value={priceRange[0] ?? ''}
+                          onChange={e => setPriceRange([e.target.value ? Number(e.target.value) : null, priceRange[1]])}
                           className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-teal-500 focus:border-teal-500"
                         />
                       </div>

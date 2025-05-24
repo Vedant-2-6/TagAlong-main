@@ -1,4 +1,5 @@
 export interface User {
+  _id: any;
   role: string;
   createdAt: any;
   id: string;
@@ -20,6 +21,7 @@ export interface User {
 }
 
 export interface Listing {
+  [x: string]: { name: string; avatar: string; rating: string; };
   id: string;
   userId: string;
   source: string;

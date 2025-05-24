@@ -117,7 +117,14 @@ exports.getMyTrips = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
+exports.getAllTrips = async (req, res) => {
+  try {
+    const trips = await Trip.find().sort({ createdAt: -1 }).populate('user', 'name avatar rating');
+    res.json({ trips });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 // Edit a trip (only by owner)
 exports.editTrip = async (req, res) => {
   try {

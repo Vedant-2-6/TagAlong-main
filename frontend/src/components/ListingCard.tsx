@@ -2,15 +2,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Calendar, Package, DollarSign, Star, Clock } from 'lucide-react';
 import { Listing, User } from '../types';
-import { mockUsers } from '../data/mockData';
+
 
 interface ListingCardProps {
   listing: Listing;
 }
 
 const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
-  // Find the user associated with this listing
-  const user = mockUsers.find(user => user.id === listing.userId) as User;
+ 
+  const user = listing.user || { name: 'Unknown', avatar: '', rating: '-' };
   
   // Format dates for display
   const formatDate = (dateString: string) => {
