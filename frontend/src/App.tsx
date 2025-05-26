@@ -21,6 +21,7 @@ import { useState } from 'react';
 import { Message } from './types';
 import SettingsPage from './pages/SettingsPage';
 import MyTripsPage from './pages/MyTripsPage';
+import Notification  from './pages/Notification';
 
 
 
@@ -91,6 +92,7 @@ function App() {
                 </div>
               }
             />
+            <Route path="/notifications" element={<Notification />} />
            
             {/* Add more routes as needed */}
           </Routes>

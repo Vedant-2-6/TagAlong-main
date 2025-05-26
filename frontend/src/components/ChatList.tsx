@@ -17,7 +17,7 @@ const ChatList: React.FC<ChatListProps> = ({ onSelectChat, selectedUserId }) => 
   }).sort((a, b) => (b.lastMessage?.timestamp || 0) - (a.lastMessage?.timestamp || 0));
 
   return (
-    <div className="w-80 border-r h-full overflow-y-auto">
+    <div className="w-80 border-r h-full overflow-y-auto pt-5">
       {chats.map(({ user, lastMessage }) => (
         <div
           key={user.id}

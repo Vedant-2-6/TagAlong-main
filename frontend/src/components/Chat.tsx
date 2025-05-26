@@ -114,13 +114,13 @@ const Chat: React.FC<ChatProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-white rounded-lg shadow-lg">
+    <div className="flex flex-col h-full w-full bg-white rounded-lg shadow-lg pt-10">
       {/* Chat Header */}
-      <div className="flex items-center p-4 border-b">
+      <div className="flex items-center p-4 border-b ">
         <img
           src={recipient.avatar}
           alt={recipient.name}
-          className="w-10 h-10 rounded-full object-cover"
+          className="w-10 h-10 rounded-full object-cover "
         />
         <div className="ml-3 flex-1">
           <div className="flex items-center">
