@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
 import { Calendar, Truck, PackageCheck, Box, Upload, UserCheck, IndianRupee, Timer, FileText } from 'lucide-react';
-
-
-const documentTypes = [
-  { value: 'aadhar', label: 'Aadhar Card' },
-  { value: 'license', label: 'Driving License' },
-  { value: 'voter_id', label: 'Voter ID' }
-];
-
 const transportModes = [
   { value: 'car', label: 'Car' },
   { value: 'bike', label: 'Bike' },
