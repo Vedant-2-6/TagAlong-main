@@ -6,9 +6,10 @@ import { Listing, User } from '../types';
 
 interface ListingCardProps {
   listing: Listing;
+  onSendParcel?: () => void; // Add this line
 }
 
-const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
+const ListingCard: React.FC<ListingCardProps> = ({ listing, onSendParcel }) => {
  
   const user = listing.user || { name: 'Unknown', avatar: '', rating: '-' };
   
@@ -26,6 +27,10 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
   const departureDate = formatDate(listing.departureDate);
   const departureTime = formatTime(listing.departureDate);
   
+  function setShowVerification(arg0: boolean): void {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
       <div className="p-5">
@@ -97,14 +102,15 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
             )}
           </div>
           
-          <Link
-            to={`/listings/${listing.id}`}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-          >
-            View Details
-          </Link>
+          <button 
+  onClick={onSendParcel}
+  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+>
+            Send Parcel
+          </button>
         </div>
       </div>
+      
     </div>
   );
 };
