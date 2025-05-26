@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, Shield, TrendingUp, Users, Star } from 'lucide-react';
 import gsap from 'gsap';
+import { useAuth } from '../context/AuthContext'; // <-- Add this import
 
 const features = [
   {
@@ -58,6 +59,7 @@ const HomePage: React.FC = () => {
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const testimonialsRef = useRef<HTMLDivElement>(null);
+  const howItWorksRef = useRef<HTMLDivElement>(null); // Add ref for animation
 
   useEffect(() => {
     if (heroRef.current) {
@@ -78,17 +80,28 @@ const HomePage: React.FC = () => {
         delay: 0.3
       });
     }
+    if (howItWorksRef.current) {
+      gsap.from(howItWorksRef.current.children, {
+        opacity: 9,
+        y: 40,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: 'power3.out',
+        delay: 0.4
+      });
+    }
     if (testimonialsRef.current) {
       gsap.from(testimonialsRef.current.children, {
         opacity: 9,
         y: 40,
-        duration: 0.8,
         stagger: 0.2,
         ease: 'power3.out',
         delay: 0.5
       });
     }
   }, []);
+
+  const { isAuthenticated } = useAuth(); // <-- Add this line
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50">
@@ -139,6 +152,54 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* How TagAlong Works Section */}
+      <section className="max-w-6xl mx-auto px-4 py-12">
+        <h2 className="text-3xl font-bold text-gray-900 mb-10 text-center">How TagAlong Works?</h2>
+        <div ref={howItWorksRef} className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0">
+          {/* Step 1 */}
+          <div className="flex flex-col items-center bg-white rounded-xl shadow-md p-6 w-full md:w-1/4 relative">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-100 text-teal-600 mb-4 font-bold text-xl">1</div>
+            <h3 className="font-semibold text-lg mb-2 text-center">Search for Trips</h3>
+            <p className="text-gray-600 text-center">Enter your source, destination, and date to find travelers going your way.</p>
+          </div>
+          {/* Arrow */}
+          <div className="hidden md:flex flex-col items-center w-10">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <path d="M10 20H30M30 20L24 14M30 20L24 26" stroke="#14b8a6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          {/* Step 2 */}
+          <div className="flex flex-col items-center bg-white rounded-xl shadow-md p-6 w-full md:w-1/4 relative">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-600 mb-4 font-bold text-xl">2</div>
+            <h3 className="font-semibold text-lg mb-2 text-center">Connect & Agree</h3>
+            <p className="text-gray-600 text-center">Message the traveler, discuss your needs, and agree on delivery details.</p>
+          </div>
+          {/* Arrow */}
+          <div className="hidden md:flex flex-col items-center w-10">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <path d="M10 20H30M30 20L24 14M30 20L24 26" stroke="#14b8a6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          {/* Step 3 */}
+          <div className="flex flex-col items-center bg-white rounded-xl shadow-md p-6 w-full md:w-1/4 relative">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600 mb-4 font-bold text-xl">3</div>
+            <h3 className="font-semibold text-lg mb-2 text-center">Track Your Parcel</h3>
+            <p className="text-gray-600 text-center">Track your item in real-time until it reaches its destination.</p>
+          </div>
+          {/* Arrow */}
+          <div className="hidden md:flex flex-col items-center w-10">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <path d="M10 20H30M30 20L24 14M30 20L24 26" stroke="#14b8a6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          {/* Step 4 */}
+          <div className="flex flex-col items-center bg-white rounded-xl shadow-md p-6 w-full md:w-1/4 relative">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-200 text-teal-700 mb-4 font-bold text-xl">4</div>
+            <h3 className="font-semibold text-lg mb-2 text-center">Receive & Rate</h3>
+            <p className="text-gray-600 text-center">Receive your item and rate your experience to help our community.</p>
+          </div>
+        </div>
+      </section>
       {/* Testimonials Section */}
       <section className="bg-white py-16">
         <div className="max-w-5xl mx-auto px-4">
@@ -169,6 +230,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Call to Action */}
+      {!isAuthenticated && ( // <-- Only show if NOT authenticated
       <section className="py-16 bg-gradient-to-r from-teal-500 to-blue-600">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">Ready to Get Started?</h2>
@@ -191,6 +253,7 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
     </div>
   );
 };
