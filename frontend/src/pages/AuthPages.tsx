@@ -206,6 +206,10 @@ export const LoginPage: React.FC = () => {
 };
 
 export const SignupPage: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+  }, []);
+
   const [formData, setFormData] = useState<FormState>({
     name: '',
     email: '',
