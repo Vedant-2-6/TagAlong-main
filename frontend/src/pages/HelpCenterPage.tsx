@@ -48,6 +48,31 @@ const HelpCenterPage: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [activeTopic, setActiveTopic] = useState<null | typeof helpTopics[0]>(null);
 
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+    if (headerRef.current) {
+      gsap.fromTo(
+        headerRef.current,
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }
+      );
+    }
+    if (sliderRef.current) {
+      gsap.fromTo(
+        sliderRef.current.children,
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.15,
+          delay: 0.5,
+          ease: 'power3.out',
+        }
+      );
+    }
+  }, []);
+
   // Progress bar and auto-scroll logic with infinite loop
   useEffect(() => {
     if (!sliderRef.current) return;
@@ -90,31 +115,6 @@ const HelpCenterPage: React.FC = () => {
       setProgress(0);
     };
   }, [isHovered]);
-
-  // GSAP animation
-  useEffect(() => {
-    if (headerRef.current) {
-      gsap.fromTo(
-        headerRef.current,
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }
-      );
-    }
-    if (sliderRef.current) {
-      gsap.fromTo(
-        sliderRef.current.children,
-        { opacity: 0, y: 40 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.7,
-          stagger: 0.15,
-          delay: 0.5,
-          ease: 'power3.out',
-        }
-      );
-    }
-  }, []);
 
   // Scroll handler (manual)
   const scrollSlider = (direction: 'left' | 'right') => {

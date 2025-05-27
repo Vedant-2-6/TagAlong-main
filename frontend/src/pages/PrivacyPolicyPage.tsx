@@ -5,6 +5,7 @@ const PrivacyPolicyPage: React.FC = () => {
   const headerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
     if (headerRef.current) {
       gsap.fromTo(
         headerRef.current,

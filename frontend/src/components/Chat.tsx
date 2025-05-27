@@ -18,6 +18,9 @@ const Chat: React.FC<ChatProps> = ({
   onTypingStart,
   onTypingEnd 
 }) => {
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+  }, []);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);

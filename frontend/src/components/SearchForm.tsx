@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Calendar, PackageCheck, Box } from 'lucide-react';
 
 interface SearchFormProps {
@@ -19,6 +19,10 @@ export interface SearchParams {
 }
 
 const SearchForm: React.FC<SearchFormProps> = ({ onSearch, className = '' }) => {
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+  }, []);
+
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
   const [date, setDate] = useState('');

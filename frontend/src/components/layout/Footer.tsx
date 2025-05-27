@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+import logo from '../../images/logo.png'
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -12,7 +13,7 @@ const Footer: React.FC = () => {
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
-              <img src="/logo.png" alt="TagAlong Logo" className="h-10 w-auto mr-2" />
+              <img src={logo} alt="TagAlong Logo" className="h-10 w-auto mr-2" />
               <span className="ml-2 text-xl font-bold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
                 TagAlong
               </span>

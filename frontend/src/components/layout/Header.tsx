@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { PackageSearch, MessageSquare, Bell, User, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import logo from '../../images/logo.png'
 
 const Header: React.FC = () => {
   const { currentUser, isAuthenticated, logout } = useAuth();
@@ -42,7 +43,7 @@ const Header: React.FC = () => {
         <div className="flex justify-between items-center py-2">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <img src="/logo.png" alt="TagAlong" className="h-8 w-8" />
+            <img src={logo} alt="TagAlong" className="h-8 w-8" />
             <span className="text-2xl font-bold bg-gradient-to-r from-teal-500 to-blue-600 bg-clip-text text-transparent">
               TagAlong
             </span>

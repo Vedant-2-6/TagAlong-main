@@ -62,6 +62,7 @@ const HomePage: React.FC = () => {
   const howItWorksRef = useRef<HTMLDivElement>(null); // Add ref for animation
 
   useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
     if (heroRef.current) {
       gsap.from(heroRef.current, {
         opacity: 9,

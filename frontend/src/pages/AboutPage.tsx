@@ -12,6 +12,7 @@ const AboutPage = () => {
   const featuresRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top when AboutPage mounts
     if (containerRef.current) {
       gsap.fromTo(
         containerRef.current,
