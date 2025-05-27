@@ -23,7 +23,7 @@ const PrivacyPolicyPage: React.FC = () => {
       </svg>
       <div className="max-w-4xl mx-auto relative z-10">
         <div ref={headerRef} className="text-center mb-10">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-8">Privacy Policy</h1>
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-8"><u>Privacy Policy</u></h1>
         </div>
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Introduction</h2>
