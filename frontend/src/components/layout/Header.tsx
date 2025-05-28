@@ -121,7 +121,7 @@ const Header: React.FC = () => {
                       Your Profile
                     </Link>
                     <Link
-                      to="/parcels"
+                      to="/myparcel"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       My Parcels
@@ -241,7 +241,7 @@ const Header: React.FC = () => {
                     Notifications
                   </Link>
                   <Link
-                    to="/parcels"
+                    to="/myparcel"
                     className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-teal-500 hover:bg-gray-50"
                   >
                     My Parcels

@@ -5,6 +5,8 @@ import { Filter, MapPin, Clock, Package, UserCheck } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
 import SearchForm, { SearchParams } from '../components/SearchForm';
 import { Listing } from '../types';
+import { useAuth } from '../context/AuthContext';
+
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -44,6 +46,9 @@ const SearchPage: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const toastTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const [toastType, setToastType] = useState<'otp' | 'request' | null>(null);
+  const [selectedTripId, setSelectedTripId] = useState<string>("");
+  const [selectedCarrierId, setSelectedCarrierId] = useState<string>("");
+  const { currentUser } = useAuth();
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
   useEffect(() => {
@@ -217,20 +222,10 @@ const SearchPage: React.FC = () => {
     }
   }
 
-  // function handleSendOtp(): void {
-  //   setOtpError("");
-  //   setOtpLoading(true);
-  //   // Simulate OTP generation and "sending"
-  //   const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-  //   setGeneratedOtp(newOtp);
-  //   setOtpSent(true);
-  //   setOtpLoading(false);
-  //   console.log("Generated OTP:", newOtp);
-  //   setShowToast(true);
-  //   if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-  //   toastTimeoutRef.current = setTimeout(() => setShowToast(false), 10000);
-  // }
-
+  function getAuthenticatedUserId() {
+    
+    return currentUser ? currentUser.id : null;
+  }
   function handleVerifyOtp(): void {
     setOtpError('');
     setOtpLoading(true);
@@ -243,42 +238,65 @@ const SearchPage: React.FC = () => {
   }
   function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
+    console.log('parcelDescription:', parcelDescription);
+    console.log('parcelWeight:', parcelWeight);
+    console.log('parcelCategory:', parcelCategory);
+    console.log('selectedTripId:', selectedTripId);
+    console.log('selectedCarrierId:', selectedCarrierId);
     setToastType('request');
     setShowToast(true);
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = setTimeout(() => setShowToast(false), 3000);
-    event.preventDefault();
-    async function sendRequest() {
-  // Implement the request logic here
-  // Return a promise
-  return fetch('/api/request', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ /* request data */ })
-  }).then(response => response.json());
-}
-  }
-  // function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
-  //   event.preventDefault();
 
-  //   setShowToast(true); // Show the notification
-  //   if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-  //   toastTimeoutRef.current = setTimeout(() => setShowToast(false), 3000);
-  //   {
-  //     showToast && (
-  //       <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow">
-  //         Request sent
-  //       </div>
-  //     )
-  //   }
-  //   {showToast && generatedOtp && (
-  //     <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow z-50">
-  //       OTP sent: <span className="font-bold">{generatedOtp}</span>
-  //     </div>
-  //   )}
-  // }
+    // Validate required fields
+    if (!parcelDescription || !parcelWeight || !parcelCategory || !selectedTripId || !selectedCarrierId) {
+      alert('Please fill all required fields.');
+      return;
+    }
+
+    async function sendRequest() {
+      const token = localStorage.getItem('tagalong-token') || sessionStorage.getItem('tagalong-token');
+      if (!token) {
+        alert('You must be logged in to send a parcel request.');
+        return;
+      }
+      try {
+        const response = await fetch('/api/parcel/request', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            description: parcelDescription,
+            weight: parcelWeight,
+            category: parcelCategory,
+            trip: selectedTripId,
+            carrier: selectedCarrierId,
+            sender: getAuthenticatedUserId() // Ensure sender ID is included
+          })
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || 'Request failed');
+        }
+        const parcelData = await response.json();
+        setSelectedTripId(parcelData.trip);
+        setSelectedCarrierId(parcelData.carrier);
+        navigate('/myparcel');
+      } catch (error) {
+        if (error instanceof Error) {
+          alert(error.message);
+        } else {
+          alert('An unexpected error occurred');
+        }
+      }
+    }
+
+    sendRequest().then(() => {
+      navigate('/myparcel');
+    });
+  }
   function handleSendOtp(): void {
     setOtpError("");
     setOtpLoading(true);
@@ -302,42 +320,7 @@ const SearchPage: React.FC = () => {
 
         <div className="lg:flex lg:gap-8">
           {/* Toast Notification */}
-    {/* {showToast && (
-      <div
-        style={{
-          position: 'fixed',
-          top: 24,
-          right: 24,
-          background: '#14b8a6',
-          color: 'white',
-          padding: '12px 24px',
-          borderRadius: 6,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          minWidth: 180,
-          fontWeight: 500,
-        }}
-      >
-        <span style={{ flex: 1 }}>Your OTP is: {generatedOtp}</span>
-        <button
-          onClick={handleCloseToast}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'white',
-            fontSize: 18,
-            marginLeft: 12,
-            cursor: 'pointer',
-            lineHeight: 1,
-          }}
-          aria-label="Close"
-        >
-          ×
-        </button>
-      </div>
-    )} */}
+    
     {showToast && toastType === 'otp' && generatedOtp && (
   <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow z-50">
     OTP sent: <span className="font-bold">{generatedOtp}</span>
@@ -555,16 +538,16 @@ const SearchPage: React.FC = () => {
 
                 {filteredListings.map(listing => (
                   <ListingCard
-                    key={listing.id}
-                    listing={listing}
+                  key={String(listing._id)}
+                  listing={listing}
                     onSendParcel={() => {
                       setShowVerification(true);
-                      // Optionally: setSelectedListing(listing);
+                      setSelectedTripId(String(listing._id)); 
+                      setSelectedCarrierId(String(listing.user._id));
                     }}
                   />
                 ))}
 
-                // Add the Aadhaar verification modal JSX (copy from ListTripPage.tsx)
                 {showVerification && (
                   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
                     <form onSubmit={handleSubmit}
