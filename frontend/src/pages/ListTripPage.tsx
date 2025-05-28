@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Truck, PackageCheck, Box, Upload, UserCheck, IndianRupee, Timer, FileText } from 'lucide-react';
 const transportModes = [
   { value: 'car', label: 'Car' },
@@ -22,7 +22,10 @@ const categories = [
 const ListTripPage: React.FC = () => {
   const [step, setStep] = useState(1);
 
-  
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+  }, []);
+
   // Trip Details
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');

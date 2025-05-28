@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, UserPlus, Mail, Lock, User, Phone, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +11,10 @@ interface FormState {
 }
 
 export const LoginPage: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+  }, []);
+
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -202,6 +206,10 @@ export const LoginPage: React.FC = () => {
 };
 
 export const SignupPage: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+  }, []);
+
   const [formData, setFormData] = useState<FormState>({
     name: '',
     email: '',

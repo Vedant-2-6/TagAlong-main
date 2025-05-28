@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { mockUsers, mockMessages } from '../data/mockData';
 
 interface ChatListProps {
@@ -7,6 +7,9 @@ interface ChatListProps {
 }
 
 const ChatList: React.FC<ChatListProps> = ({ onSelectChat, selectedUserId }) => {
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+  }, []);
   // Group messages by user and get latest message for each
   const chats = mockUsers.map(user => {
     const userMessages = mockMessages.filter(
@@ -17,7 +20,7 @@ const ChatList: React.FC<ChatListProps> = ({ onSelectChat, selectedUserId }) => 
   }).sort((a, b) => (b.lastMessage?.timestamp || 0) - (a.lastMessage?.timestamp || 0));
 
   return (
-    <div className="w-80 border-r h-full overflow-y-auto pt-5">
+    <div className="w-80 border-r h-full overflow-y-auto pt-10">
       {chats.map(({ user, lastMessage }) => (
         <div
           key={user.id}

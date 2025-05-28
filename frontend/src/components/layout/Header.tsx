@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { PackageSearch, MessageSquare, Bell, User, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../images/logo.png';
+
 const Header: React.FC = () => {
   const { currentUser, isAuthenticated, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);

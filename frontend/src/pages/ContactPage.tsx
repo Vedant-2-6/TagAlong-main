@@ -5,6 +5,7 @@ const ContactPage = () => {
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
     if (cardRef.current) {
       gsap.fromTo(
         cardRef.current,

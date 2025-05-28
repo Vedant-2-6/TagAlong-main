@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, User, Edit, LogOut, ShieldCheck } from 'lucide-react';
 
 const ProfilePage: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+  }, []);
   const { currentUser, setCurrentUser, logout } = useAuth();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 

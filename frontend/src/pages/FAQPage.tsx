@@ -48,6 +48,7 @@ const FAQPage = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
     if (containerRef.current) {
       gsap.fromTo(
         containerRef.current,
