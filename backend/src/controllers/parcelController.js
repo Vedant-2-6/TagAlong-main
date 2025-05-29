@@ -47,3 +47,29 @@ exports.createParcelRequest = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+// Update parcel request status
+exports.updateParcelStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    if (!['accepted', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const parcelRequest = await ParcelRequest.findById(id);
+    if (!parcelRequest) {
+      return res.status(404).json({ message: 'Parcel request not found' });
+    }
+
+    // Update status
+    parcelRequest.status = status;
+    await parcelRequest.save();
+
+    res.json(parcelRequest);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

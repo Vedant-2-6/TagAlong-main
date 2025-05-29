@@ -9,4 +9,7 @@ router.post('/request', auth, parcelController.createParcelRequest);
 // Get user's parcels (requires authentication)
 router.get('/myparcels', auth, parcelController.getMyParcels);
 
+// Update parcel request status (requires authentication)
+router.patch('/request/:id/status', auth, parcelController.updateParcelStatus);
+
 module.exports = router;
