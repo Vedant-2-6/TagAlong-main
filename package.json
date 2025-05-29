@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "firebase": "^11.8.0"
+    "crypto-js": "^4.2.0",
+    "firebase": "^11.8.0",
+    "socket.io-client": "^4.8.1"
   }
 }

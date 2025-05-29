@@ -1,31 +1,45 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, Image, MapPin, Check } from 'lucide-react';
 import { Message, User } from '../types';
-import { mockUsers } from '../data/mockData';
+import { useChat } from '../context/ChatContext.js';
+import { useAuth } from '../context/AuthContext';
 
 interface ChatProps {
   recipientId: string;
-  messages: Message[];
-  onSendMessage: (content: string, type: Message['type'], metadata?: Message['metadata']) => void;
-  onTypingStart: () => void;
-  onTypingEnd: () => void;
 }
 
-const Chat: React.FC<ChatProps> = ({ 
-  recipientId, 
-  messages, 
-  onSendMessage,
-  onTypingStart,
-  onTypingEnd 
-}) => {
+const Chat: React.FC<ChatProps> = ({ recipientId }) => {
+  const { currentUser } = useAuth();
+  const { 
+    messages, 
+    setActiveChat, 
+    sendMessage, 
+    typingStatus, 
+    setTyping,
+    chatUsers
+  } = useChat();
+  
+  const [newMessage, setNewMessage] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  // Find recipient from chat users
+  const recipient = chatUsers.find(user => 
+    (user.id === recipientId) || (user._id === recipientId)
+  );
+
   useEffect(() => {
     window.scrollTo(0, 0); // Scroll to top on mount
-  }, []);
-  const [newMessage, setNewMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<number>();
-  const recipient = mockUsers.find(user => user.id === recipientId);
+    setActiveChat(recipientId);
+    
+    return () => {
+      // Clean up typing status when component unmounts
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      setTyping(recipientId, false);
+    };
+  }, [recipientId, setActiveChat]); // Remove setTyping from dependency array
 
   if (!recipient) {
     return (
@@ -41,34 +55,29 @@ const Chat: React.FC<ChatProps> = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages[recipientId]]);
 
   const handleTyping = () => {
-    if (!isTyping) {
-      setIsTyping(true);
-      onTypingStart();
-    }
+    setTyping(recipientId, true);
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
-    typingTimeoutRef.current = window.setTimeout(() => {
-      setIsTyping(false);
-      onTypingEnd();
+    typingTimeoutRef.current = setTimeout(() => {
+      setTyping(recipientId, false);
     }, 1000);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newMessage.trim()) {
-      onSendMessage(newMessage, 'text');
+      sendMessage(newMessage, 'text');
       setNewMessage('');
-      setIsTyping(false);
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      onTypingEnd();
+      setTyping(recipientId, false);
     }
   };
 
@@ -78,7 +87,7 @@ const Chat: React.FC<ChatProps> = ({
       // In a real app, this would upload to a server and get a URL
       const reader = new FileReader();
       reader.onload = () => {
-        onSendMessage('Sent an image', 'image', { imageUrl: reader.result as string });
+        sendMessage('Sent an image', 'image', { imageUrl: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
@@ -88,7 +97,7 @@ const Chat: React.FC<ChatProps> = ({
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
-        onSendMessage('Shared location', 'location', { latitude, longitude });
+        sendMessage('Shared location', 'location', { latitude, longitude });
       });
     }
   };
@@ -116,6 +125,80 @@ const Chat: React.FC<ChatProps> = ({
     }
   };
 
+  const chatMessages = messages[recipientId] || [];
+  const isTyping = typingStatus[recipientId];
+
+  function renderMessageContent(message: Message): React.ReactNode {
+    switch (message.type) {
+      case 'text':
+        return (
+          <div className="message-bubble">
+            <p>{message.content}</p>
+            <div className="message-meta">
+              <span className="message-time">
+                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              {message.senderId === currentUser?._id && renderMessageStatus(message.status)}
+            </div>
+          </div>
+        );
+      
+      case 'image':
+        return (
+          <div className="message-bubble">
+            {message.metadata?.imageUrl && (
+              <img 
+                src={message.metadata.imageUrl} 
+                alt="Shared image" 
+                className="rounded-lg max-w-[200px] max-h-[200px] object-cover mb-2" 
+              />
+            )}
+            <p>{message.content}</p>
+            <div className="message-meta">
+              <span className="message-time">
+                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              {message.senderId === currentUser?._id && renderMessageStatus(message.status)}
+            </div>
+          </div>
+        );
+      
+      case 'location':
+        return (
+          <div className="message-bubble">
+            {message.metadata?.latitude && message.metadata?.longitude && (
+              <div className="bg-gray-100 p-2 rounded-lg mb-2 flex items-center">
+                <MapPin size={16} className="text-red-500 mr-2" />
+                <span className="text-sm">
+                  Location: {message.metadata.latitude.toFixed(6)}, {message.metadata.longitude.toFixed(6)}
+                </span>
+              </div>
+            )}
+            <p>{message.content}</p>
+            <div className="message-meta">
+              <span className="message-time">
+                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              {message.senderId === currentUser?._id && renderMessageStatus(message.status)}
+            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <div className="message-bubble">
+            <p>{message.content}</p>
+            <div className="message-meta">
+              <span className="message-time">
+                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              {message.senderId === currentUser?._id && renderMessageStatus(message.status)}
+            </div>
+          </div>
+        );
+    }
+  }
+
   return (
     <div className="flex flex-col h-full w-full bg-white rounded-lg shadow-lg pt-10">
       {/* Chat Header */}
@@ -139,68 +222,28 @@ const Chat: React.FC<ChatProps> = ({
               recipient.onlineStatus === 'online' ? 'bg-green-500' : 'bg-gray-400'
             }`} />
             <span className="text-gray-500">
-              {recipient.onlineStatus === 'online' ? 'Online' : 'Last seen ' + new Date(recipient.lastSeen).toLocaleString()}
+              {recipient.onlineStatus === 'online' ? 'Online' : 'Last seen ' + new Date(recipient.lastSeen || Date.now()).toLocaleString()}
             </span>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ minHeight: 0 }}>
-        {messages.map((message, index) => {
-          const isOwnMessage = message.senderId !== recipientId;
-          const sender = mockUsers.find(user => user.id === message.senderId);
-
-          return (
-            <div
-              key={message.id}
-              className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[70%] break-words ${
-                  isOwnMessage
-                    ? 'bg-teal-500 text-white rounded-l-lg rounded-tr-lg'
-                    : 'bg-gray-100 text-gray-900 rounded-r-lg rounded-tl-lg'
-                } p-3 shadow-sm`}
-              >
-                {message.type === 'text' && (
-                  <p className="text-sm">{message.content}</p>
-                )}
-
-                {message.type === 'image' && message.metadata?.imageUrl && (
-                  <div className="mb-2">
-                    <img 
-                      src={message.metadata.imageUrl} 
-                      alt="Shared image" 
-                      className="rounded-lg max-w-full"
-                    />
-                  </div>
-                )}
-
-                {message.type === 'location' && message.metadata?.latitude && (
-                  <div className="flex items-center text-sm">
-                    <MapPin size={16} className="mr-1" />
-                    <a 
-                      href={`https://maps.google.com/?q=${message.metadata.latitude},${message.metadata.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline"
-                    >
-                      View shared location
-                    </a>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-end mt-1 space-x-2">
-                  <span className="text-xs opacity-75">
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </span>
-                  {renderMessageStatus(message.status)}
-                </div>
-              </div>
+      // In the Chat component, update the messages rendering section
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {!messages[recipientId] || messages[recipientId].length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p>No messages yet.</p>
+            <p className="text-sm mt-2">Send a message to start the conversation!</p>
+          </div>
+        ) : (
+         
+          messages[recipientId].map((message) => (
+            <div key={message.id} className={`message ${message.senderId === currentUser?._id ? 'sent' : 'received'}`}>
+              {renderMessageContent(message)}
             </div>
-          );
-        })}
+          ))
+        )}
         <div ref={messagesEndRef} />
       </div>
 

@@ -1,7 +1,8 @@
-import {useEffect} from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { AuthProvider } from './context/AuthContext';
+import { ChatProvider } from './context/ChatContext';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -15,17 +16,18 @@ import HelpCenterPage from './pages/HelpCenterPage';
 import { LoginPage, SignupPage } from './pages/AuthPages';
 import ListTripPage from './pages/ListTripPage';
 import Chat from './components/Chat';
-import { mockUsers, mockMessages } from './data/mockData'; // Make sure these exist and are imported
+import { mockMessages } from './data/mockData'; // Make sure these exist and are imported
 import ChatList from './components/ChatList';
-import { useState } from 'react';
 import { Message } from './types';
 import SettingsPage from './pages/SettingsPage';
 import MyParcelPage from './pages/MyParcelPage';
 import MyTripsPage from './pages/MyTripsPage';
 import Notification  from './pages/Notification';
+import ChatInitializer from './components/ChatInitializer';
 
 
 
+// In the App component
 function App() {
   useEffect(() => {
     // Set up page transitions or global animations here
@@ -33,12 +35,6 @@ function App() {
       nullTargetWarn: false,
     });
   }, []);
-
-  // Remove these lines:
-  // const mockRecipientId = mockUsers[0]?.id || '';
-  // const filteredMessages = mockMessages.filter(msg =>
-  //   msg.senderId === mockRecipientId || msg.receiverId === mockRecipientId
-  // );
 
   const handleSendMessage = (
     content: string,
@@ -51,55 +47,63 @@ function App() {
   };
   const handleTypingStart = () => {};
   const handleTypingEnd = () => {};
-
-  const [selectedUserId, setSelectedUserId] = useState(mockUsers[0]?.id || '');
-
+  
+  // Initialize selectedUserId from localStorage or default to first mock user
+  const [selectedUserId, setSelectedUserId] = useState(() => {
+    const savedChat = localStorage.getItem('tagalong-selected-chat');
+    if (savedChat) {
+      try {
+        const parsed = JSON.parse(savedChat);
+        return parsed.partnerId;
+      } catch (e) {
+        console.error('Error parsing saved chat:', e);
+      }
+    }
+    return '';
+  }); 
+  
   const filteredMessages = mockMessages.filter(msg =>
     (msg.senderId === selectedUserId || msg.receiverId === selectedUserId)
   );
 
   return (
     <AuthProvider>
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/listings/create" element={<ListTripPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/faq" element={<FAQPage />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/help" element={<HelpCenterPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/mytrips" element={<MyTripsPage />} />
-            <Route path="/myparcel" element={<MyParcelPage />} />
-            
-            <Route
-              path="/messages"
-              element={
-                <div className="flex h-[80vh]">
-                  <ChatList onSelectChat={setSelectedUserId} selectedUserId={selectedUserId} />
-                  <Chat
-                    recipientId={selectedUserId}
-                    messages={filteredMessages}
-                    onSendMessage={handleSendMessage}
-                    onTypingStart={handleTypingStart}
-                    onTypingEnd={handleTypingEnd}
-                  />
-                </div>
-              }
-            />
-            <Route path="/notifications" element={<Notification />} />
-           
-            {/* Add more routes as needed */}
-          </Routes>
-        </Layout>
-      </Router>
+      <ChatProvider>
+        <ChatInitializer /> {/* Add this component inside ChatProvider */}
+        <Router>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/listings/create" element={<ListTripPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/faq" element={<FAQPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/help" element={<HelpCenterPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/mytrips" element={<MyTripsPage />} />
+              <Route path="/myparcel" element={<MyParcelPage />} />
+              <Route path="/messages" element={
+                  <div className="flex h-[80vh]">
+                    <ChatList onSelectChat={setSelectedUserId} selectedUserId={selectedUserId} />
+                    <Chat
+                      recipientId={selectedUserId}
+                    />
+                  </div>
+                }
+              />
+              <Route path="/notifications" element={<Notification />} />
+             
+              
+            </Routes>
+          </Layout>
+        </Router>
+      </ChatProvider>
     </AuthProvider>
   );
 }

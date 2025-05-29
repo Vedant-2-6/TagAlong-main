@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ChatList from '../components/ChatList';
 import { useAuth } from '../context/AuthContext';
+import { useChat } from '../context/ChatContext'; // Add this import
+import { Message, User } from '../types';
+import chatService from '../services/ChatService';
 
 interface Parcel {
   _id: string;
@@ -19,7 +21,12 @@ const MyParcelPage: React.FC = () => {
   const [parcels, setParcels] = useState<Parcel[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedParcel, setSelectedParcel] = useState<Parcel | null>(null);
-  const { currentUser } = useAuth(); // Make sure this is available
+  const [showChat, setShowChat] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [chatPartnerId, setChatPartnerId] = useState<string>('');
+  const { currentUser } = useAuth();
+  const { addChatUser } = useChat(); // Add this line to use the hook at the top level
+  const navigate = useNavigate();
 
   // Add this function to handle status updates
   const handleUpdateStatus = async (parcelId: string, status: 'accepted' | 'rejected') => {
@@ -35,6 +42,118 @@ const MyParcelPage: React.FC = () => {
     if (res.ok) {
       setParcels(prev => prev.map(p => p._id === parcelId ? { ...p, status } : p));
     }
+  };
+
+  useEffect(() => {
+    const fetchParcels = async () => {
+      setLoading(true);
+      const token = localStorage.getItem('tagalong-token') || sessionStorage.getItem('tagalong-token');
+      const res = await fetch('/api/parcel/myparcels', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setParcels(data); // Backend returns an array, not { parcels: [...] }
+      }
+      setLoading(false);
+    };
+    fetchParcels();
+  }, []);
+
+  // Handle opening chat
+  const handleOpenChat = async (parcel: Parcel) => {
+    if (!currentUser) return;
+    
+    setSelectedParcel(parcel);
+    
+    // Determine chat partner (if current user is sender, chat with carrier, and vice versa)
+    const partnerId = currentUser._id === parcel.sender._id 
+      ? parcel.carrier._id 
+      : parcel.sender._id;
+    
+    setChatPartnerId(partnerId);
+    
+    try {
+      // Fetch chat history
+      const chatHistory = await chatService.getChatHistory(currentUser._id, partnerId);
+      setMessages(chatHistory);
+      setShowChat(true);
+    } catch (error) {
+      console.error('Failed to fetch chat history:', error);
+    }
+  };
+
+  // Handle sending a message
+  const handleSendMessage = async (content: string, type: Message['type'], metadata?: Message['metadata']) => {
+    if (!currentUser || !chatPartnerId) return;
+    
+    try {
+      const newMessage = await chatService.sendMessage({
+        senderId: currentUser._id,
+        receiverId: chatPartnerId,
+        content,
+        type,
+        metadata,
+        createdAt: new Date().toISOString(),
+        timestamp: Date.now().toString()
+        
+      });
+      
+      // Update messages state
+      setMessages(prev => [...prev, newMessage]);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
+  };
+
+  // Handle chat redirection
+  // Handle chat button click
+  // Update handleChatClick function
+  const handleChatClick = (parcel: Parcel) => {
+    if (!currentUser) return;
+    
+    // Determine chat partner (if current user is sender, chat with carrier, and vice versa)
+    const partnerId = currentUser._id === parcel.sender._id 
+      ? parcel.carrier._id 
+      : parcel.sender._id;
+    
+    // Get partner details
+    const chatPartner = currentUser._id === parcel.sender._id ? parcel.carrier : parcel.sender;
+    
+    // Create a proper User object for the chat partner
+    const chatPartnerUser: User = {
+      _id: partnerId,
+      id: partnerId,
+      name: chatPartner.name,
+      avatar: chatPartner.avatar || `http://localhost:5000/uploads/avatars/${partnerId}.jpg`,
+      verificationStatus: chatPartner.verificationStatus,
+      onlineStatus: 'online',
+      lastSeen: new Date().toISOString(),
+      // Add missing required properties
+      role: 'user',
+      createdAt: new Date().toISOString(),
+      email: '',
+      phone: '',
+      isVerified: false,
+      verificationDocuments: [],
+      rating: 0,
+      reviews: []
+    };
+    
+    addChatUser(chatPartnerUser);
+    
+    // Store the selected chat partner in localStorage for persistence
+    localStorage.setItem('tagalong-selected-chat', JSON.stringify({
+      partnerId,
+      partnerName: chatPartner.name,
+      partnerAvatar: chatPartner.avatar || `http://localhost:5000/uploads/avatars/${partnerId}.jpg`,
+      partnerVerificationStatus: chatPartner.verificationStatus || 'unverified',
+      partnerOnlineStatus: 'offline',
+      partnerLastSeen: new Date().toISOString()
+    }));
+    
+    // Navigate to the messages page
+    navigate('/messages');
   };
 
   useEffect(() => {
@@ -95,24 +214,22 @@ const MyParcelPage: React.FC = () => {
                       </button>
                     </div>
                   )}
-                  {/* Chat button for accepted or rejected requests */}
+                  {/* Chat button for accepted parcels */}
                   {(parcel.status === 'accepted') && (
                     <div className="flex gap-2 mt-2">
-                    <button
-                      className="flex items-center bg-teal-500 hover:bg-teal-600 text-white font-semibold px-5 py-2 rounded transition-colors mt-2 shadow"
-                      onClick={() => setSelectedParcel(parcel)}
-                    >
-                      Chat
-                    </button> 
-                    
-                    <button
-                    className="flex items-center bg-teal-500 hover:bg-teal-600 text-white font-semibold px-5 py-2 rounded transition-colors mt-2 shadow"
-                    onClick={() => setSelectedParcel(parcel)}
-                  >
-                    Make Payment
-                  </button>
-                  </div>
-                    
+                      <button
+                        className="flex items-center bg-teal-500 hover:bg-teal-600 text-white font-semibold px-5 py-2 rounded transition-colors mt-2 shadow"
+                        onClick={() => handleChatClick(parcel)}
+                      >
+                        Chat
+                      </button> 
+                      
+                      <button
+                        className="flex items-center bg-teal-500 hover:bg-teal-600 text-white font-semibold px-5 py-2 rounded transition-colors mt-2 shadow"
+                      >
+                        Make Payment
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
