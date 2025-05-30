@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PackageSearch, MessageSquare, Bell, User, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../images/logo.png';
+import { useChat } from '../../context/ChatContext';
 
 const Header: React.FC = () => {
   const { currentUser, isAuthenticated, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-
+  const { refreshChats } = useChat(); // Add this line
+  const navigate = useNavigate();
+  const handleMessagesClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (refreshChats) {
+      refreshChats().then(() => {
+        navigate('/messages');
+      }).catch(err => {
+        console.error('Failed to refresh chats:', err);
+        navigate('/messages'); // Navigate anyway
+      });
+    } else {
+      navigate('/messages');
+    }
+  };
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);

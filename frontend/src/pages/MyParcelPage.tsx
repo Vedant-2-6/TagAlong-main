@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useChat } from '../context/ChatContext'; // Add this import
 import { Message, User } from '../types';
-import chatService from '../services/ChatService';
 
 interface Parcel {
   _id: string;
@@ -25,7 +23,6 @@ const MyParcelPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatPartnerId, setChatPartnerId] = useState<string>('');
   const { currentUser } = useAuth();
-  const { addChatUser } = useChat(); // Add this line to use the hook at the top level
   const navigate = useNavigate();
 
   // Add this function to handle status updates
@@ -75,8 +72,6 @@ const MyParcelPage: React.FC = () => {
     
     try {
       // Fetch chat history
-      const chatHistory = await chatService.getChatHistory(currentUser._id, partnerId);
-      setMessages(chatHistory);
       setShowChat(true);
     } catch (error) {
       console.error('Failed to fetch chat history:', error);
@@ -84,31 +79,9 @@ const MyParcelPage: React.FC = () => {
   };
 
   // Handle sending a message
-  const handleSendMessage = async (content: string, type: Message['type'], metadata?: Message['metadata']) => {
-    if (!currentUser || !chatPartnerId) return;
-    
-    try {
-      const newMessage = await chatService.sendMessage({
-        senderId: currentUser._id,
-        receiverId: chatPartnerId,
-        content,
-        type,
-        metadata,
-        createdAt: new Date().toISOString(),
-        timestamp: Date.now().toString()
-        
-      });
+  
       
-      // Update messages state
-      setMessages(prev => [...prev, newMessage]);
-    } catch (error) {
-      console.error('Failed to send message:', error);
-    }
-  };
-
-  // Handle chat redirection
-  // Handle chat button click
-  // Update handleChatClick function
+    
   const handleChatClick = (parcel: Parcel) => {
     if (!currentUser) return;
     
@@ -140,7 +113,6 @@ const MyParcelPage: React.FC = () => {
       reviews: []
     };
     
-    addChatUser(chatPartnerUser);
     
     // Store the selected chat partner in localStorage for persistence
     localStorage.setItem('tagalong-selected-chat', JSON.stringify({

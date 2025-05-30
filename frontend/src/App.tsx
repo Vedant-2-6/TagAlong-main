@@ -15,15 +15,13 @@ import TermsPage from './pages/TermsPage';
 import HelpCenterPage from './pages/HelpCenterPage';
 import { LoginPage, SignupPage } from './pages/AuthPages';
 import ListTripPage from './pages/ListTripPage';
-import Chat from './components/Chat';
 import { mockMessages } from './data/mockData'; // Make sure these exist and are imported
-import ChatList from './components/ChatList';
 import { Message } from './types';
 import SettingsPage from './pages/SettingsPage';
 import MyParcelPage from './pages/MyParcelPage';
 import MyTripsPage from './pages/MyTripsPage';
 import Notification  from './pages/Notification';
-import ChatInitializer from './components/ChatInitializer';
+import ChatPage from './pages/ChatPage';
 
 
 
@@ -48,7 +46,7 @@ function App() {
   const handleTypingStart = () => {};
   const handleTypingEnd = () => {};
   
-  // Initialize selectedUserId from localStorage or default to first mock user
+  // Initialize selectedUserId from localStorage or default to empty string
   const [selectedUserId, setSelectedUserId] = useState(() => {
     const savedChat = localStorage.getItem('tagalong-selected-chat');
     if (savedChat) {
@@ -60,8 +58,28 @@ function App() {
       }
     }
     return '';
-  }); 
+  });
   
+  // Update selectedUserId when localStorage changes
+  // Update the storage event listener to handle changes from other tabs
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'tagalong-selected-chat') {
+        const savedChat = event.newValue;
+        if (savedChat) {
+          try {
+            const parsed = JSON.parse(savedChat);
+            setSelectedUserId(parsed.partnerId);
+          } catch (e) {
+            console.error('Error parsing saved chat:', e);
+          }
+        }
+      }
+    };
+  
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
   const filteredMessages = mockMessages.filter(msg =>
     (msg.senderId === selectedUserId || msg.receiverId === selectedUserId)
   );
@@ -69,7 +87,6 @@ function App() {
   return (
     <AuthProvider>
       <ChatProvider>
-        <ChatInitializer /> {/* Add this component inside ChatProvider */}
         <Router>
           <Layout>
             <Routes>
@@ -88,18 +105,8 @@ function App() {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/mytrips" element={<MyTripsPage />} />
               <Route path="/myparcel" element={<MyParcelPage />} />
-              <Route path="/messages" element={
-                  <div className="flex h-[80vh]">
-                    <ChatList onSelectChat={setSelectedUserId} selectedUserId={selectedUserId} />
-                    <Chat
-                      recipientId={selectedUserId}
-                    />
-                  </div>
-                }
-              />
+              <Route path="/messages" element={<ChatPage />} />
               <Route path="/notifications" element={<Notification />} />
-             
-              
             </Routes>
           </Layout>
         </Router>

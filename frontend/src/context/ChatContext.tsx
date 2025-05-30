@@ -1,173 +1,263 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Message, User } from '../types';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
+import { Message, Chat, User } from '../types';
 import { useAuth } from './AuthContext';
-import chatService from '../services/ChatService';
-import { useCallback } from 'react';
 
 interface ChatContextType {
   messages: Record<string, Message[]>;
+  chats: Chat[];
   activeChat: string | null;
+  isLoading: boolean;
+  sendMessage: (receiverId: string, content: string, type: Message['type'], metadata?: Message['metadata']) => Promise<boolean>;
   setActiveChat: (userId: string) => void;
-  sendMessage: (content: string, type: Message['type'], metadata?: Message['metadata']) => void;
   typingStatus: Record<string, boolean>;
-  setTyping: (userId: string, isTyping: boolean) => void;
-  chatUsers: User[];
-  addChatUser: (user: User) => void;
+  startTyping: (receiverId: string) => void;
+  stopTyping: (receiverId: string) => void;
+  refreshChatHistory: (userId1: string, userId2: string) => Promise<void>;
+  refreshChats: () => Promise<void>;
+  sendImage: (receiverId: string, file: File) => Promise<boolean>;
+  sendLocation: (receiverId: string, latitude: number, longitude: number) => Promise<boolean>;
 }
 
-const ChatContext = createContext<ChatContextType | undefined>(undefined);
+export const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useAuth();
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
+  const [chats, setChats] = useState<Chat[]>([]);
   const [activeChat, setActiveChat] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [typingStatus, setTypingStatus] = useState<Record<string, boolean>>({});
-  const [chatUsers, setChatUsers] = useState<User[]>([]);
-
-  // Initialize chat service
-  useEffect(() => {
-    if (currentUser) {
-      const userId = currentUser.id || currentUser._id;
-      chatService.connect(userId);
-      
-      // Load saved messages and chat users
-      loadMessages();
-      loadChatUsers();
-      
-      return () => {
-        chatService.disconnect();
-      };
-    }
-  }, [currentUser]);
-
-  // Set up message listener
+  
+  // Connect to socket when user is authenticated
   useEffect(() => {
     if (!currentUser) return;
     
-    chatService.onNewMessage((message) => {
+    const newSocket = io('http://localhost:5000', {
+      query: { userId: currentUser._id }
+    });
+    
+    setSocket(newSocket);
+    
+    // Socket event listeners
+    newSocket.on('connect', () => {
+      console.log('Connected to socket server');
+    });
+    
+    newSocket.on('new_message', (message: Message) => {
+      // Add message to state
       setMessages(prev => {
-        const chatId = message.senderId === currentUser.id || message.senderId === currentUser._id
-          ? message.receiverId
-          : message.senderId;
-        
-        const updatedMessages = { ...prev };
-        
-        if (!updatedMessages[chatId]) {
-          updatedMessages[chatId] = [];
+        const senderId = message.senderId;
+        const prevMessages = prev[senderId] || [];
+        return {
+          ...prev,
+          [senderId]: [...prevMessages, message]
+        };
+      });
+      
+      // Update chats list
+      refreshChats();
+    });
+    
+    newSocket.on('typing_start', (data: { userId: string }) => {
+      setTypingStatus(prev => ({ ...prev, [data.userId]: true }));
+    });
+    
+    newSocket.on('typing_end', (data: { userId: string }) => {
+      setTypingStatus(prev => ({ ...prev, [data.userId]: false }));
+    });
+    
+    // Clean up on unmount
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [currentUser]);
+  
+  // Refresh chat history between two users
+  const refreshChatHistory = async (userId1: string, userId2: string) => {
+    if (!socket) return;
+    
+    setIsLoading(true);
+    
+    return new Promise<void>((resolve, reject) => {
+      socket.emit('get_chat_history', { userId1, userId2 }, (response: any) => {
+        if (response.success) {
+          setMessages(prev => ({
+            ...prev,
+            [userId2]: response.messages
+          }));
+          setIsLoading(false);
+          resolve();
+        } else {
+          console.error('Failed to fetch chat history:', response.error);
+          setIsLoading(false);
+          reject(new Error(response.error));
         }
-        
-        // Check if message already exists
-        const exists = updatedMessages[chatId].some(msg => msg.id === message.id);
-        if (!exists) {
-          updatedMessages[chatId] = [...updatedMessages[chatId], message];
-        }
-        
-        return updatedMessages;
       });
     });
-  }, [currentUser]);
-
-  // Load messages from local storage
-  const loadMessages = async () => {
-    if (!currentUser) return;
-    
-    const userId = currentUser.id || currentUser._id;
-    
-    try {
-      // Get all chat partners
-      const userChats = await chatService.getUserChats(userId);
-      
-      // Load messages for each chat partner
-      const allMessages: Record<string, Message[]> = {};
-      
-      for (const chat of userChats) {
-        const partnerId = chat.user._id;
-        const chatHistory = await chatService.getChatHistory(userId, partnerId);
-        allMessages[partnerId] = chatHistory;
-      }
-      
-      setMessages(allMessages);
-    } catch (error) {
-      console.error('Failed to load messages:', error);
-    }
   };
-
-  // Load chat users from local storage
-  const loadChatUsers = async () => {
-    if (!currentUser) return;
+  
+  // Refresh all chats for current user
+  const refreshChats = async () => {
+    if (!socket || !currentUser) return Promise.resolve();
     
-    const userId = currentUser.id || currentUser._id;
-    
-    try {
-      const userChats = await chatService.getUserChats(userId);
-      setChatUsers(userChats.map(chat => chat.user));
-    } catch (error) {
-      console.error('Failed to load chat users:', error);
-    }
-  };
-
-  // Add a new chat user
-  const addChatUser = (user: User) => {
-    setChatUsers(prev => {
-      // Check if user already exists
-      const exists = prev.some(u => (u.id === user.id) || (u._id === user._id));
-      if (exists) return prev;
+    return new Promise<void>((resolve, reject) => {
+      // Add timeout to prevent hanging requests
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Request timed out'));
+      }, 10000); // 10 seconds timeout
       
-      return [...prev, user];
+      socket.emit('get_user_chats', { userId: currentUser._id }, (response: any) => {
+        clearTimeout(timeoutId); // Clear timeout on response
+        
+        if (response.success) {
+          setChats(response.chats);
+          resolve();
+        } else {
+          console.error('Failed to fetch chats:', response.error);
+          reject(new Error(response.error));
+        }
+      });
     });
   };
-
+  
   // Send a message
-  const sendMessage = async (content: string, type: Message['type'] = 'text', metadata?: Message['metadata']) => {
-    if (!activeChat || !currentUser) return;
-
-    const currentUserId = currentUser.id || currentUser._id;
+  const sendMessage = async (
+    receiverId: string,
+    content: string,
+    type: Message['type'] = 'text',
+    metadata?: Message['metadata']
+  ): Promise<boolean> => {
+    if (!socket || !currentUser) return false;
     
-    try {
-      const newMessage = await chatService.sendMessage({
-        senderId: currentUserId,
-        receiverId: activeChat,
+    return new Promise((resolve) => {
+      const message = {
+        senderId: currentUser._id,
+        receiverId,
         content,
         type,
         metadata,
-        createdAt: new Date().toISOString(),
         timestamp: Date.now()
+      };
+      
+      socket.emit('send_message', message, (response: any) => {
+        if (response.success) {
+          // Add message to state
+          setMessages(prev => {
+            const prevMessages = prev[receiverId] || [];
+            return {
+              ...prev,
+              [receiverId]: [...prevMessages, response.message]
+            };
+          });
+          
+          // Update chats list
+          refreshChats();
+          resolve(true);
+        } else {
+          console.error('Failed to send message:', response.error);
+          resolve(false);
+        }
+      });
+    });
+  };
+  
+  // Send an image
+  const sendImage = async (receiverId: string, file: File): Promise<boolean> => {
+    if (!currentUser) return false;
+    
+    // Create a FormData object to send the file
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('senderId', currentUser._id);
+    formData.append('receiverId', receiverId);
+    
+    try {
+      const token = localStorage.getItem('tagalong-token') || sessionStorage.getItem('tagalong-token');
+      const response = await fetch('/api/chat/upload-image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
       });
       
-      // Update local state
-      setMessages(prev => {
-        const updatedMessages = { ...prev };
-        if (!updatedMessages[activeChat]) {
-          updatedMessages[activeChat] = [];
-        }
-        updatedMessages[activeChat] = [...updatedMessages[activeChat], newMessage];
-        return updatedMessages;
-      });
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      const data = await response.json();
+      
+      // Send message with image URL
+      return sendMessage(
+        receiverId,
+        'Image',
+        'image',
+        { imageUrl: data.imageUrl }
+      );
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('Error uploading image:', error);
+      return false;
     }
   };
-
-  // Set typing status
-  const setTyping = useCallback((userId: string, isTyping: boolean) => {
-    setTypingStatus(prev => {
-      // Only update if the value is actually changing
-      if (prev[userId] === isTyping) return prev;
-      return { ...prev, [userId]: isTyping };
+  
+  // Send location
+  const sendLocation = async (
+    receiverId: string,
+    latitude: number,
+    longitude: number
+  ): Promise<boolean> => {
+    return sendMessage(
+      receiverId,
+      'Location',
+      'location',
+      { latitude, longitude }
+    );
+  };
+  
+  // Typing indicators
+  const startTyping = (receiverId: string) => {
+    if (!socket || !currentUser) return;
+    
+    socket.emit('typing_start', {
+      senderId: currentUser._id,
+      receiverId
     });
-  }, []);
-
+  };
+  
+  const stopTyping = (receiverId: string) => {
+    if (!socket || !currentUser) return;
+    
+    socket.emit('typing_end', {
+      senderId: currentUser._id,
+      receiverId
+    });
+  };
+  
+  // Load initial chats when user is authenticated
+  useEffect(() => {
+    if (currentUser) {
+      refreshChats();
+    }
+  }, [currentUser]);
+  
   return (
     <ChatContext.Provider
       value={{
         messages,
+        chats,
         activeChat,
-        setActiveChat,
+        isLoading,
         sendMessage,
+        setActiveChat,
         typingStatus,
-        setTyping,
-        chatUsers,
-        addChatUser
+        startTyping,
+        stopTyping,
+        refreshChatHistory,
+        refreshChats,
+        sendImage,
+        sendLocation
       }}
     >
       {children}
@@ -175,7 +265,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useChat = () => {
+export const useChat = (): ChatContextType => {
   const context = useContext(ChatContext);
   if (context === undefined) {
     throw new Error('useChat must be used within a ChatProvider');

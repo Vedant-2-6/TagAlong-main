@@ -21,9 +21,12 @@ export interface User {
 }
 
 export interface Listing {
-  [x: string]: {
-    _id(_id: any): unknown; name: string; avatar: string; rating: string; 
-};
+  user?: {
+    _id: string;
+    name: string;
+    avatar: string;
+    rating: string;
+  };
   id: string;
   userId: string;
   source: string;
@@ -107,12 +110,18 @@ export interface Message {
 }
 
 export interface Chat {
-  id: string;
-  participants: string[];
+  id?: string;
+  user: {
+    _id: string;
+    name: string;
+    avatar: string;
+    verificationStatus: string;
+    onlineStatus?: 'online' | 'offline' | 'away';
+  };
   lastMessage: Message;
   unreadCount: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Notification {
