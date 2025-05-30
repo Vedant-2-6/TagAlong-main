@@ -18,7 +18,14 @@ exports.getChatHistory = async (req, res) => {
       ]
     }).sort({ timestamp: 1 });
     
-    res.json(messages);
+    // Decrypt message content for frontend
+    const decryptedMessages = messages.map(msg => {
+      const msgObj = msg.toObject();
+      msgObj.content = msg.decryptContent();
+      return msgObj;
+    });
+    
+    res.json(decryptedMessages);
   } catch (error) {
     console.error('Error fetching chat history:', error);
     res.status(500).json({ error: 'Failed to fetch chat history' });
@@ -76,7 +83,7 @@ exports.getUserChats = async (req, res) => {
           verificationStatus: partner.verificationStatus
         },
         lastMessage: {
-          content: latestMessage.content,
+          content: latestMessage.decryptContent(), // Decrypt for frontend
           timestamp: latestMessage.timestamp,
           createdAt: latestMessage.createdAt
         },

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { encrypt, decrypt } = require('../utils/encryption');
 
 const messageSchema = new mongoose.Schema({
   senderId: { 
@@ -39,7 +40,29 @@ const messageSchema = new mongoose.Schema({
   }
 });
 
+// Pre-save hook to encrypt message content before saving to database
+messageSchema.pre('save', function(next) {
+  // Only encrypt if content is modified and not already encrypted
+  if (this.isModified('content') && !this.content.includes(':')) {
+    this.content = encrypt(this.content);
+  }
+  next();
+});
+
 // Create a compound index for efficient querying of conversations
 messageSchema.index({ senderId: 1, receiverId: 1, createdAt: -1 });
+
+// Add a method to decrypt content
+messageSchema.methods.decryptContent = function() {
+  if (this.content && this.content.includes(':')) {
+    return decrypt(this.content);
+  }
+  return this.content; // Return as is if not encrypted
+};
+
+// Virtual property for decrypted content
+messageSchema.virtual('decryptedContent').get(function() {
+  return this.decryptContent();
+});
 
 module.exports = mongoose.model('Message', messageSchema);

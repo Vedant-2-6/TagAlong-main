@@ -268,9 +268,9 @@ const ChatPage: React.FC = () => {
     }, {}) : {};
 
   return (
-    <div ref={pageRef} className="container mx-auto px-5 py-20 max-w-6xl pt-20 "> {/* Increased top padding */}
+    <div ref={pageRef} className="container mx-auto px-5 py-20 max-w-6xl pt-15 "> {/* Increased top padding */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="flex h-[80vh]">
+        <div className="flex h-[83vh]">
           {/* Chat List - Show on mobile only when showChatList is true */}
           <div 
             className={`${showChatList ? 'block' : 'hidden'} md:block w-full md:w-1/3 border-r border-gray-200`}

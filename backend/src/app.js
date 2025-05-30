@@ -10,6 +10,7 @@ const tripRoutes = require('./routes/tripRoutes');
 const parcelRoutes = require('./routes/parcelRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const Message = require('./models/Message');
+const { decrypt } = require('./utils/encryption');
 
 require('dotenv').config();
 
@@ -56,7 +57,7 @@ io.on('connection', (socket) => {
   // Handle sending messages
   socket.on('send_message', async (message, callback) => {
     try {
-      // Create new message in database
+      // Create new message in database (encryption happens in pre-save hook)
       const newMessage = new Message({
         senderId: message.senderId,
         receiverId: message.receiverId,
@@ -73,16 +74,21 @@ io.on('connection', (socket) => {
       const recipientSocketId = connectedUsers.get(message.receiverId);
       
       if (recipientSocketId) {
-        // Send message to recipient
-        io.to(recipientSocketId).emit('new_message', newMessage);
+        // Send message to recipient with decrypted content for frontend
+        const messageForClient = newMessage.toObject();
+        messageForClient.content = newMessage.decryptContent();
+        
+        io.to(recipientSocketId).emit('new_message', messageForClient);
         
         // Update message status to delivered
         newMessage.status = 'delivered';
         await newMessage.save();
       }
       
-      // Send acknowledgment back to sender
-      callback({ success: true, message: newMessage });
+      // Send acknowledgment back to sender with decrypted content
+      const responseMessage = newMessage.toObject();
+      responseMessage.content = newMessage.decryptContent();
+      callback({ success: true, message: responseMessage });
     } catch (error) {
       console.error('Error sending message:', error);
       callback({ success: false, error: 'Failed to send message' });
@@ -117,7 +123,14 @@ io.on('connection', (socket) => {
         ]
       }).sort({ timestamp: 1 });
       
-      callback({ success: true, messages });
+      // Decrypt message content for frontend
+      const decryptedMessages = messages.map(msg => {
+        const msgObj = msg.toObject();
+        msgObj.content = msg.decryptContent();
+        return msgObj;
+      });
+      
+      callback({ success: true, messages: decryptedMessages });
       
       // Mark messages as read
       await Message.updateMany(
@@ -178,7 +191,7 @@ io.on('connection', (socket) => {
             verificationStatus: partner.verificationStatus
           },
           lastMessage: {
-            content: latestMessage.content,
+            content: latestMessage.decryptContent(), // Decrypt for frontend
             timestamp: latestMessage.timestamp,
             createdAt: latestMessage.createdAt
           },
